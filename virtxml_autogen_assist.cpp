@@ -151,6 +151,19 @@ struct DLIterator {
         else
             n = nullptr;
     }
+    template <class Hdl> auto next(Hdl hdl) {
+        if (n->first_node()) {
+            n = n->first_node();
+        } else if (n->next_sibling())
+            n = n->next_sibling();
+        else if (n->parent())
+            do {
+                hdl(n);
+                n = n->parent();
+            } while (n->parent());
+        else
+            n = nullptr;
+    }
     constexpr bool operator!=(const DFIterator& oth) const noexcept { return n != oth.n; }
     constexpr bool operator==(const DFIterator& oth) const noexcept { return n == oth.n; }
     constexpr bool operator!=(std::nullptr_t) const noexcept { return !n; }
@@ -164,30 +177,36 @@ class Enum;
 class Property;
 class Datatype;
 
-enum class Type { String, Bool, Int, Unsigned, ReferenceHidden };
+enum class Type { None, String, Bool, Int, Unsigned, InlineEnum, SingleValue, ReferenceHidden };
 
 struct Class {
     std::string name;
     std::vector<Class> classes;
     std::vector<Property> properties;
+    std::vector<std::string> references;
     std::optional<Datatype> dtype;
 };
 
-struct Definition : public Class {};
+struct Definition : public Class {
+    unsigned references = 0;
+};
 
 struct Enum {
     std::string name;
     std::vector<std::string> values;
+    std::vector<std::string> references;
 };
 
 struct Property {
     std::string name;
-    Type type;
+    Type type{};
+    std::string reference;
+    std::optional<Enum> e;
 };
 
 struct Datatype {
     std::string name;
-    Type type;
+    Type type{};
 };
 
 constexpr std::array<std::pair<const char*, Type>, 8> builtins{{
@@ -202,6 +221,74 @@ constexpr std::array<std::pair<const char*, Type>, 8> builtins{{
 }};
 
 } // namespace RNGAST
+
+void parse_choice(RNGAST::Enum& e, const xml_node<>* node) {
+    for (auto curr = node->first_node("value"); curr; curr = curr->next_sibling("value"))
+        e.values.emplace_back(curr->value(), curr->value_size());
+}
+
+void parse_node(std::vector<RNGAST::Definition>& ast_defs, RNGAST::Class& parent_class, const xml_node<>* node, bool mark_optional) {
+    bool next_mark_optional = false;
+    bool nest = false;
+    if (node->name() == "element"sv) {
+        auto& loc = parent_class.classes.emplace_back();
+        loc.name = node->first_attribute("name")->value();
+        nest = true;
+    } else if (node->name() == "ref"sv) {
+        std::string_view ref_name{node->first_attribute("name")->value(), node->first_attribute("name")->value_size()};
+        const auto it = std::find_if(ast_defs.begin(), ast_defs.end(), [=](const auto& def) { return def.name == ref_name; });
+        if (it == ast_defs.end())
+            throw std::runtime_error{std::string{"Unresolved reference: "} + ref_name.data()};
+        ++it->references;
+    } else if (node->name() == "optional"sv) {
+        next_mark_optional = true;
+        nest = true;
+    } else if (node->name() == "interleave"sv || node->name() == "group"sv) {
+        nest = true;
+    } else if (node->name() == "attribute"sv) {
+        auto& loc = parent_class.properties.emplace_back();
+        loc.name = node->first_attribute("name")->value();
+        {
+            auto curr = node->first_node();
+            if (curr->name() == "ref"sv) {
+                loc.type = RNGAST::Type::ReferenceHidden;
+                loc.reference = curr->first_attribute("name")->value();
+                std::string_view ref_name{node->first_attribute("name")->value(), node->first_attribute("name")->value_size()};
+                const auto it = std::find_if(ast_defs.begin(), ast_defs.end(), [=](const auto& def) { return def.name == ref_name; });
+                if (it == ast_defs.end())
+                    throw std::runtime_error{std::string{"Unresolved reference: "} + ref_name.data()};
+                ++it->references;
+            } else if (curr->name() == "text"sv) {
+                loc.type = RNGAST::Type::String;
+            } else if (curr->name() == "choice"sv) {
+                loc.type = RNGAST::Type::InlineEnum;
+                parse_choice(loc.e.emplace(), curr);
+            } else if (curr->name() == "value"sv) {
+                loc.type = RNGAST::Type::SingleValue;
+                loc.e.emplace().values.emplace_back(curr->value());
+            } else if (curr->name() == "data"sv) {
+            }
+        }
+
+    } else if (node->name() == "element"sv) {
+
+    } else if (node->name() == "element"sv) {
+
+    } else if (node->name() == "element"sv) {
+
+    } else if (node->name() == "element"sv) {
+
+    } else if (node->name() == "element"sv) {
+
+    } else if (node->name() == "element"sv) {
+    }
+
+    if (nest) {
+        auto parent_class_of_children = node->name() == "element"sv ? parent_class.classes.back() : parent_class;
+        for (auto curr = node->first_node(); curr; curr = curr->next_sibling())
+            parse_node(ast_defs, parent_class, curr, next_mark_optional);
+    }
+}
 
 void parse(const xml_node<>* gram) {
     enum class DefTag { NONE, IS_TYPE, IS_CLASSMK };
@@ -232,11 +319,29 @@ void parse(const xml_node<>* gram) {
     for (auto curr = gram->first_node("define"); curr; curr = curr->next_sibling("define")) {
         auto v = curr;
         auto& def = ast_defs.emplace_back();
+        RNGAST::Class* parent_class = nullptr;
         DLIterator it{v};
         while (it != nullptr) {
             const auto node = *it;
+            RNGAST::Class* curr_class{};
             if (node->name() == "element"sv) {
+                curr_class = parent_class ? &parent_class->classes.emplace_back() : &def.classes.emplace_back();
             }
+
+            if (it.n->first_node()) {
+                if (curr_class)
+                    parent_class = curr_class;
+                it.n = it.n->first_node();
+            } else if (it.n->next_sibling())
+                it.n = it.n->next_sibling();
+            else if (it.n->parent())
+                do {
+                    if (node->name() == "element"sv)
+                        ;
+                    it.n = it.n->parent();
+                } while (it.n->parent());
+            else
+                it.n = nullptr;
         }
     }
 
@@ -259,6 +364,17 @@ int main(int argc, char** argv) {
         std::cout << "Usage: " << argv[0] << " [infile] [outfile]" << std::endl;
         return 0;
     }
+
+    std::ifstream stream(argv[1], std::ios::binary);
+    if (!stream)
+        throw std::runtime_error(std::string("cannot open file ") + argv[1]);
+    stream.unsetf(std::ios::skipws);
+    stream.seekg(0, std::ios::end);
+    size_t size = stream.tellg();
+    stream.seekg(0);
+    std::vector<char> data(size + 1);
+    stream.read(&data.front(), static_cast<std::streamsize>(size));
+    data[size] = '\0';
 
     rapidxml_ns::xml_document<> doc{};
     if (!verify(doc)) {
