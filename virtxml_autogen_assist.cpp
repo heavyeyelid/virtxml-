@@ -178,10 +178,11 @@ class Property;
 class Datatype;
 
 enum class Type { None, String, Bool, Int, Unsigned, InlineEnum, SingleValue, ReferenceHidden };
+enum Quantifier { Default = 0, ZeroOrMore = 1, OneOrMore = 2, Optional = 128 };
 
 struct Class {
     std::string name;
-    std::vector<Class> classes;
+    std::vector<std::pair<Class, Quantifier>> classes;
     std::vector<Property> properties;
     std::vector<std::string> references;
     std::optional<Datatype> dtype;
@@ -222,12 +223,13 @@ constexpr std::array<std::pair<const char*, Type>, 8> builtins{{
 
 } // namespace RNGAST
 
-void parse_choice(RNGAST::Enum& e, const xml_node<>* node) {
+void parse_choice(RNGAST::Enum& e, const xml_node<>* node) { // FIXME: also exists over attributes
     for (auto curr = node->first_node("value"); curr; curr = curr->next_sibling("value"))
         e.values.emplace_back(curr->value(), curr->value_size());
 }
 
-void parse_node(std::vector<RNGAST::Definition>& ast_defs, RNGAST::Class& parent_class, const xml_node<>* node, bool mark_optional) {
+void parse_node(std::vector<RNGAST::Definition>& ast_defs, RNGAST::Class& parent_class, const xml_node<>* node,
+                RNGAST::Quantifier mark = RNGAST::Quantifier::Default) {
     bool next_mark_optional = false;
     bool nest = false;
     if (node->name() == "element"sv) {
@@ -284,7 +286,7 @@ void parse_node(std::vector<RNGAST::Definition>& ast_defs, RNGAST::Class& parent
     }
 
     if (nest) {
-        auto parent_class_of_children = node->name() == "element"sv ? parent_class.classes.back() : parent_class;
+        auto parent_class_of_children = node->name() == "element"sv ? parent_class.classes.back().first : parent_class;
         for (auto curr = node->first_node(); curr; curr = curr->next_sibling())
             parse_node(ast_defs, parent_class, curr, next_mark_optional);
     }

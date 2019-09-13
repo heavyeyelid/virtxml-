@@ -28,6 +28,7 @@ if (Boost_FOUND AND LibVirt_FOUND)
             thirdparty/lift/include
             thirdparty/inih
             thirdparty/ctre/include
+            thirdparty
             include)
 
     if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
@@ -70,7 +71,7 @@ if (Boost_FOUND AND LibVirt_FOUND)
             include/cexpr_algs.hpp
             include/flatmap.hpp
             include/json_utils.hpp
-            include/urlparser.hpp)
+            include/urlparser.hpp include/virtxml/domain.hpp include/virtxml/cpu_types.hpp)
 
     target_link_libraries (HE_debug ${Boost_LIBRARIES} ${LibVirt_LIBRARIES} pthread )
     if (WIN32)
