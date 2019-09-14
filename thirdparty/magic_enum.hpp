@@ -173,6 +173,12 @@ template <typename E, E V>
 #endif
 
 #if defined(__clang__) || defined(__GNUC__) && __GNUC__ >= 9 || defined(_MSC_VER)
+/// BEGIN PATCH
+    // pop an underscore from the back of the string if there is any
+    // allows to use keywords as enum values when suffixed by an underscore
+    if(!name.empty() && name.back() == '_')
+        name.remove_suffix(1);
+/// END PATCH
   return static_string<name.size()>{name};
 #endif
 }

@@ -49,10 +49,10 @@ enum class Mode {
 };
 
 template <class CRTP, template <class> class Optional = std::void_t> struct HasMode : public HasMore<CRTP, HasMode<CRTP, Optional>> {
-    template <std::enable_if_t<!std::is_void_v<Optional<void>>, int> = 0>[[nodiscard]] virtxml::Optional<Mode> mode() const noexcept {
+    template <std::enable_if_t<!std::is_void_v<Optional<void>>, int> = 0>[[nodiscard]] std::optional<Mode> mode() const noexcept {
         return *magic_enum::enum_cast<Mode>(this->get_node()->next_attribute("mode")->value());
     }
-    template <std::enable_if_t<std::is_void_v<Optional<void>>, int> = 0>[[nodiscard]] virtxml::Optional<Mode> mode() const noexcept {
+    template <std::enable_if_t<std::is_void_v<Optional<void>>, int> = 0>[[nodiscard]] Mode mode() const noexcept {
         return *magic_enum::enum_cast<Mode>(this->get_node()->next_attribute("mode")->value());
     }
 };
@@ -64,11 +64,11 @@ enum class Match {
 };
 
 template <class CRTP, template <class> class Optional = std::void_t> struct HasMatch : public HasMore<CRTP, HasMatch<CRTP, Optional>> {
-    template <std::enable_if_t<!std::is_void_v<Optional<void>>, int> = 0>[[nodiscard]] virtxml::Optional<Match> mode() const noexcept {
+    template <std::enable_if_t<!std::is_void_v<Optional<void>>, int> = 0>[[nodiscard]] std::optional<Match> mode() const noexcept {
         return *magic_enum::enum_cast<Match>(this->get_node()->next_attribute("mode")->value());
     }
-    template <std::enable_if_t<std::is_void_v<Optional<void>>, int> = 0>[[nodiscard]] virtxml::Optional<Match> mode() const noexcept {
-        return *magic_enum::enum_cast<Match>(this->get_node()->next_attribute("mode")->value());
+    template <std::enable_if_t<std::is_void_v<Optional<void>>, int> = 0>[[nodiscard]] Match mode() const noexcept {
+        return magic_enum::enum_cast<Match>(this->get_node()->next_attribute("mode")->value());
     }
 };
 
@@ -79,11 +79,11 @@ enum class Check {
 };
 
 template <class CRTP, template <class> class Optional = std::void_t> struct HasCheck : public HasMore<CRTP, HasCheck<CRTP, Optional>> {
-    template <std::enable_if_t<!std::is_void_v<Optional<void>>, int> = 0>[[nodiscard]] virtxml::Optional<Check> mode() const noexcept {
+    template <std::enable_if_t<!std::is_void_v<Optional<void>>, int> = 0>[[nodiscard]] std::optional<Check> mode() const noexcept {
         return *magic_enum::enum_cast<Check>(this->get_node()->next_attribute("mode")->value());
     }
-    template <std::enable_if_t<std::is_void_v<Optional<void>>, int> = 0>[[nodiscard]] virtxml::Optional<Check> mode() const noexcept {
-        return *magic_enum::enum_cast<Check>(this->get_node()->next_attribute("mode")->value());
+    template <std::enable_if_t<std::is_void_v<Optional<void>>, int> = 0>[[nodiscard]] Check mode() const noexcept {
+        return magic_enum::enum_cast<Check>(this->get_node()->next_attribute("mode")->value());
     }
 };
 
@@ -94,7 +94,7 @@ struct Model : public Node {
     };
     [[nodiscard]] std::optional<Fallback> fallback() const noexcept {
         const auto fb_node = node->first_attribute("fallback");
-        return fb_node ? std::optional{*magic_enum::enum_cast<Fallback>(fb_node->value())} : std::nullopt;
+        return fb_node ? magic_enum::enum_cast<Fallback>(fb_node->value()) : std::nullopt;
     }
     [[nodiscard]] Optional<String> vendor_id() const noexcept { return String{node->first_attribute("vendor_id")}; }
     [[nodiscard]] explicit operator std::string_view() const noexcept { return {node->value(), node->value_size()}; }
@@ -145,7 +145,7 @@ struct NumaCell : public Node {
     [[nodiscard]] Optional<String> unit() const noexcept { return String{node->first_attribute("unit")}; }
     [[nodiscard]] std::optional<MemAccess> mem_access() const noexcept {
         const auto ma_node = node->first_attribute("memAccess");
-        return ma_node ? std::optional{*magic_enum::enum_cast<MemAccess>(ma_node->value())} : std::nullopt;
+        return ma_node ? magic_enum::enum_cast<MemAccess>(ma_node->value()) : std::nullopt;
     }
     [[nodiscard]] Optional<NamedSpan<NumaDistance>> distances() const noexcept {
         return NamedSpan<NumaDistance>{"sibling", node->first_node("distances")};
