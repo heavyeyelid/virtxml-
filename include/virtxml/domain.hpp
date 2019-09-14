@@ -302,7 +302,7 @@ struct Domain : private Node {
             };
             [[nodiscard]] Name name() const noexcept { return *magic_enum::enum_cast<Name>(node->first_attribute("name")->value()); }
             [[nodiscard]] bool enabled() const noexcept {
-                return static_cast<bool>(*magic_enum::enum_cast<YesNo>(node->first_attribute("enabled")).value());
+                return static_cast<bool>(*magic_enum::enum_cast<YesNo>(node->first_attribute("enabled")->value()));
             }
         };
         [[nodiscard]] NamedSpan<Event> events() const noexcept { return NamedSpan<Event>{"event", node}; }
