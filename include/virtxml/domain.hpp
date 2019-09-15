@@ -6,12 +6,18 @@
 #include <rapidxml_ns.hpp>
 #include "cpu_types.hpp"
 #include "generic.hpp"
+#include "network.hpp"
 #include "storage.hpp"
 #include "xmlspan.hpp"
 #include "xmlval.hpp"
 
 namespace virtxml {
 inline namespace {
+
+struct Reconnect : public Node {
+    [[nodiscard]] bool enabled() const noexcept { return static_cast<bool>(*magic_enum::enum_cast<YesNo>(node->first_attribute("enabled"))); }
+    [[nodicard]] Optional<Integral> timeout() const noexcept { return Integral{node->first_attribute("timeout")}; }
+};
 
 struct Address : public Node {
     enum class Type {
@@ -712,6 +718,169 @@ struct Domain : private Node {
             [[nodiscard]] Optional<Address> address() const noexcept { return Address{node->first_attribute("address")}; }
             [[nodiscard]] Optional<SpaceLimit> hard_space_limit() const noexcept { return SpaceLimit{node->first_attribute("hard_space_limit")}; }
             [[nodiscard]] Optional<SpaceLimit> soft_space_limit() const noexcept { return SpaceLimit{node->first_attribute("soft_space_limit")}; }
+        };
+        struct Interface : public Node {
+            enum class Type {
+                bridge,
+                ethernet,
+                vhostuser,
+                network,
+                direct,
+                user,
+                internal,
+                mcast,
+                client,
+                udp,
+                server,
+                hostdev,
+                pci,
+                usb,
+            };
+
+            struct Source : public Node, public HasMacTableManager<Source, Optional> {
+                enum class VhostUserType {
+                    unix,
+                };
+                enum class VHostUserMode {
+                    server,
+                    client,
+                };
+                enum class BridgeMode {
+                    vepa,
+                    bridge,
+                    private_,
+                    passthrough,
+                };
+
+                struct Ip : public Node {
+                    [[nodiscard]] String address() const noexcept { return String{node->first_attribute("address")}; }
+                    [[nodiscard]] Optional<String> family() const noexcept { return String{node->first_attribute("family")}; }
+                    [[nodiscard]] Optional<Integral> prefix() const noexcept { return Integral{node->first_attribute("prefix")}; }
+                    [[nodiscard]] Optional<String> peer() const noexcept { return String{node->first_attribute("peer")}; }
+                };
+                struct Route : public Node {
+                    [[nodiscard]] Optional<String> family() const noexcept { return String{node->first_attribute("family")}; }
+                    [[nodiscard]] String address() const noexcept { return String{node->first_attribute("address")}; }
+                    [[nodiscard]] Optional<String> netmask() const noexcept { return String{node->first_attribute("netmask")}; }
+                    [[nodiscard]] Optional<Integral> prefix() const noexcept { return Integral{node->first_attribute("prefix")}; }
+                    [[nodiscard]] String gateway() const noexcept { return String{node->first_attribute("gateway")}; }
+                    [[nodiscard]] Optional<Integral> metric() const noexcept { return Integral{node->first_attribute("metric")}; }
+                };
+                struct UdpLocal : public Node {
+                    [[nodiscard]] Optional<String> address() const noexcept { return String{node->first_attribute("address")}; }
+                    [[nodiscard]] Optional<Integral> port() const noexcept { return Integral{node->first_attribute("port")}; }
+                };
+
+                [[nodiscard]] Optional<String> bridge() const noexcept { return String{node->first_attribute("bridge")}; }
+                [[nodiscard]] Optional<String> network() const noexcept { return String{node->first_attribute("network")}; }
+                [[nodiscard]] Optional<String> port_group() const noexcept { return String{node->first_attribute("portgroup")}; }
+                [[nodiscard]] NamedSpan<Ip> ethernet_ips() const noexcept { return NamedSpan<Ip>{"ip", node}; }
+                [[nodiscard]] NamedSpan<Route> ethernet_routes() const noexcept { return NamedSpan<Route>{"route", node}; }
+                [[nodiscard]] std::optional<VhostUserType> vhostuser_type() const noexcept {
+                    const auto type_attr = node->first_attribute("type");
+                    return type_attr ? magic_enum::enum_cast<VhostUserType>(type_attr->value()) : std::nullopt;
+                }
+                [[nodiscard]] Optional<String> vhostuser_path() const noexcept { return String{node->first_attribute("path")}; }
+                [[nodiscard]] std::optional<VhostUserMode> vhostuser_mode() const noexcept {
+                    const auto mode_attr = node->first_attribute("mode");
+                    return mode_attr ? magic_enum::enum_cast<VhostUserMode>(mode_attr->value()) : std::nullopt;
+                }
+                [[nodiscard]] Optional<Reconnect> vhostuser_reconnect() const noexcept { return Reconnect{node->first_node("reconnect")}; }
+                [[nodiscard]] Optional<String> direct_dev() const noexcept { return String{node->first_attribute("dev")}; }
+                [[nodiscard]] std::optional<BridgeMode> direct_mode() const noexcept {
+                    const auto mode_attr = node->first_attribute("mode");
+                    return mode_attr ? magic_enum::enum_cast<BridgeMode>(mode_attr->value()) : std::nullopt;
+                }
+                [[nodiscard]] Optional<String> internal_name() const noexcept { return String{node->first_attribute("name")}; }
+                [[nodiscard]] Optional<String> address() const noexcept { return String{node->first_attribute("address")}; }
+                [[nodiscard]] Optional<Integral> port() const noexcept { return Integral{node->first_attribute("port")}; }
+                [[nodiscard]] Optional<UdpLocal> udp_local() const noexcept { return UdpLocal{node->first_node("local")}; }
+                [[nodiscard]] std::optional<bool> hostdev_missing() const noexcept {
+                    const auto attr = node->first_attribute("missing");
+                    return attr ? static_cast<bool>(*magic_enum::enum_cast<YesNo>(attr->value())) : std::nullopt;
+                }
+            };
+
+            [[nodiscard]] Type type() const noexcept { return *magic_enum::enum_cast<Type>(node->first_attribute("type")); }
+            [[nodiscard]] Optional<Source> source() const noexcept { return Source{node->first_node("source")}; }
+            [[nodiscard]] std::optional<bool> hostdev_managed() const noexcept {
+                const auto attr = node->first_attribute("managed");
+                return attr ? static_cast<bool>(*magic_enum::enum_cast<YesNo>(attr->value())) : std::nullopt;
+            }
+            /*
+    <element name="interface">
+      <choice>
+        <group> // bridge
+          <interleave>
+            <optional>
+              <ref name="virtualPortProfile"/>
+            </optional>
+            <ref name="interface-options"/>
+          </interleave>
+        </group>
+        <group> // hostdev
+          <interleave>
+            <element name="source">
+              <choice>
+                <group>
+                  <element name="vendor">
+                      <attribute name="id">
+                        <ref name="usbId"/>
+                      </attribute>
+                    </element>
+                    <element name="product">
+                      <attribute name="id">
+                        <ref name="usbId"/>
+                      </attribute>
+                    </element>
+                  <optional>
+                      <element name="address">
+                        <attribute name="bus">
+                          <ref name="usbAddr"/>
+                        </attribute>
+                        <attribute name="device">
+                          <ref name="usbPort"/>
+                        </attribute>
+                      </element>
+                  </optional>
+                </group>
+                <element name="address">
+                  <choice>
+                    <group>
+                      <attribute name="type">
+                        <value>pci</value>
+                      </attribute>
+                      <ref name="pciaddress"/>
+                    </group>
+                    <group>
+                      <attribute name="type">
+                        <value>usb</value>
+                      </attribute>
+                      <attribute name="bus">
+                        <ref name="usbAddr"/>
+                      </attribute>
+                      <attribute name="device">
+                        <ref name="usbPort"/>
+                      </attribute>
+                    </group>
+                  </choice>
+                </element>
+              </choice>
+            </element>
+            <optional>
+              <ref name="virtualPortProfile"/>
+            </optional>
+            <ref name="interface-options"/>
+          </interleave>
+        </group>
+      </choice>
+      <optional>
+        <attribute name="trustGuestRxFilters">
+          <ref name="virYesNo"/>
+        </attribute>
+      </optional>
+    </element>
+             * */
         };
         /*
      <element name="devices">
