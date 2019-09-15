@@ -35,7 +35,7 @@ template <class CRTP, template <class> class Optional = std::void_t> struct HasF
     }
 
     template <std::enable_if_t<std::is_void_v<Optional<void>>, int> = 0>[[nodiscard]] Format format() const noexcept {
-        return magic_enum::enum_cast<Format>(this->get_node()->next_attribute("format")->value());
+        return *magic_enum::enum_cast<Format>(this->get_node()->next_attribute("format")->value());
     }
 };
 

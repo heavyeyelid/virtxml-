@@ -21,7 +21,7 @@ struct HasMacTableManager : public HasMore<CRTP, HasMacTableManager<CRTP, Option
     }
 
     template <std::enable_if_t<std::is_void_v<Optional<void>>, int> = 0>[[nodiscard]] MacTableManager mode() const noexcept {
-        return magic_enum::enum_cast<MacTableManager>(this->get_node()->next_attribute("macTableManager")->value());
+        return *magic_enum::enum_cast<MacTableManager>(this->get_node()->next_attribute("macTableManager")->value());
     }
 };
 

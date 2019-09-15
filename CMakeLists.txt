@@ -71,7 +71,7 @@ if (Boost_FOUND AND LibVirt_FOUND)
             include/cexpr_algs.hpp
             include/flatmap.hpp
             include/json_utils.hpp
-            include/urlparser.hpp include/virtxml/domain.hpp include/virtxml/cpu_types.hpp include/virtxml/storage.hpp)
+            include/urlparser.hpp include/virtxml/domain.hpp include/virtxml/cpu_types.hpp include/virtxml/storage.hpp include/virtxml/network.hpp)
 
     target_link_libraries (HE_debug ${Boost_LIBRARIES} ${LibVirt_LIBRARIES} pthread )
     if (WIN32)
