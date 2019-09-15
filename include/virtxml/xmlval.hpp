@@ -36,8 +36,10 @@ struct StringNode : public Node {
 
 struct Integral : public Value {
 #if 1 /* With functions */
-    inline explicit operator int() const noexcept { return std::atoi(item->value()); }
-    inline explicit operator unsigned() const noexcept { return std::atoll(item->value()); }
+    inline explicit operator signed long long() const noexcept { return std::strtol(item->value(), nullptr, 0); }
+    inline explicit operator unsigned long long() const noexcept { return std::strtoul(item->value(), nullptr, 0); }
+    inline explicit operator int() const noexcept { return static_cast<signed long long>(*this); }
+    inline explicit operator unsigned() const noexcept { return static_cast<unsigned long long>(*this); }
 #else /* With paramexpr */
     using operator int(this s) = std::atoi(s.item->value());
     using operator unsigned(this s) = std::atoll(s.item->value())

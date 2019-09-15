@@ -28,4 +28,4 @@ template <class FCRTP, class CRTP> struct HasMore {
         return static_cast<const Node&>(static_cast<const FCRTP&>(static_cast<const CRTP&>(*this))).node;
     }
 };
-}
+} // namespace virtxml
