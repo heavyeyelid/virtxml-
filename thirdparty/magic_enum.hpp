@@ -176,10 +176,9 @@ template <typename E, E V>
 /// BEGIN PATCH
     // pop an underscore from the back of the string if there is any
     // allows to use keywords as enum values when suffixed by an underscore
-    if(!name.empty() && name.back() == '_')
-        name.remove_suffix(1);
+    constexpr auto name_fixed = !name.empty() && name.back() == '_' ? name.substr(0, name.size() - 1) : name;
+    return static_string<name.size()>{name_fixed};
 /// END PATCH
-  return static_string<name.size()>{name};
 #endif
 }
 

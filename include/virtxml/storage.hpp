@@ -27,15 +27,11 @@ enum class Format {
 };
 
 template <class CRTP, template <class> class Optional = std::void_t> struct HasFormat : public HasMore<CRTP, HasFormat<CRTP, Optional>> {
-    template <std::enable_if_t<!std::is_void_v<Optional<void>>, int> = 0>[[nodiscard]] std::optional<Format> format() const noexcept {
-        const auto attr = this->get_node()->next_attribute("format");
-        if (!attr)
-            return std::nullopt;
-        return magic_enum::enum_cast<Format>(attr->value());
-    }
-
-    template <std::enable_if_t<std::is_void_v<Optional<void>>, int> = 0>[[nodiscard]] Format format() const noexcept {
-        return *magic_enum::enum_cast<Format>(this->get_node()->next_attribute("format")->value());
+    [[nodiscard]] std::optional<Format> format() const noexcept {
+        if constexpr (std::is_void_v<Optional<void>>)
+            return *magic_enum::enum_cast<Format>(this->get_node()->first_attribute("format")->value());
+        const auto attr = this->get_node()->first_attribute("format");
+        return attr ? magic_enum::enum_cast<Format>(attr->value()) : std::nullopt;
     }
 };
 

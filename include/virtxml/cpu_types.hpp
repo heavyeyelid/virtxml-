@@ -50,12 +50,11 @@ enum class Mode {
 };
 
 template <class CRTP, template <class> class Optional = std::void_t> struct HasMode : public HasMore<CRTP, HasMode<CRTP, Optional>> {
-    template <std::enable_if_t<!std::is_void_v<Optional<void>>, int> = 0>[[nodiscard]] std::optional<Mode> mode() const noexcept {
-        const auto mode_attr = this->get_node()->next_attribute("mode");
-        return mode_attr ? magic_enum::enum_cast<Mode>(mode_attr->value()) : std::nullopt;
-    }
-    template <std::enable_if_t<std::is_void_v<Optional<void>>, int> = 0>[[nodiscard]] Mode mode() const noexcept {
-        return *magic_enum::enum_cast<Mode>(this->get_node()->next_attribute("mode")->value());
+    [[nodiscard]] auto mode() const noexcept {
+        if constexpr (std::is_void_v<Optional<void>>)
+            return *magic_enum::enum_cast<Mode>(this->get_node()->first_attribute("mode")->value());
+        const auto mode_attr = this->get_node()->first_attribute("mode");
+        return mode_attr ? magic_enum::enum_cast<Mode>(mode_attr->value()) : std::optional<Mode>{std::nullopt};
     }
 };
 
@@ -66,13 +65,11 @@ enum class Match {
 };
 
 template <class CRTP, template <class> class Optional = std::void_t> struct HasMatch : public HasMore<CRTP, HasMatch<CRTP, Optional>> {
-    template <std::enable_if_t<!std::is_void_v<Optional<void>>, int> = 0>[[nodiscard]] std::optional<Match> mode() const noexcept {
-        const auto match_attr = this->get_node()->next_attribute("mode");
-        return match_attr ? magic_enum::enum_cast<Match>(match_attr->value()) : std::nullopt;
-    }
-
-    template <std::enable_if_t<std::is_void_v<Optional<void>>, int> = 0>[[nodiscard]] Match mode() const noexcept {
-        return *magic_enum::enum_cast<Match>(this->get_node()->next_attribute("mode")->value());
+    [[nodiscard]] auto match() const noexcept {
+        if constexpr (std::is_void_v<Optional<void>>)
+            return *magic_enum::enum_cast<Match>(this->get_node()->first_attribute("mode")->value());
+        const auto match_attr = this->get_node()->first_attribute("mode");
+        return match_attr ? magic_enum::enum_cast<Match>(match_attr->value()) : std::optional<Match>{std::nullopt};
     }
 };
 
@@ -83,12 +80,11 @@ enum class Check {
 };
 
 template <class CRTP, template <class> class Optional = std::void_t> struct HasCheck : public HasMore<CRTP, HasCheck<CRTP, Optional>> {
-    template <std::enable_if_t<!std::is_void_v<Optional<void>>, int> = 0>[[nodiscard]] std::optional<Check> mode() const noexcept {
-        const auto check_attr = this->get_node()->next_attribute("mode");
-        return check_attr ? magic_enum::enum_cast<Check>(check_attr->value()) : std::nullopt;
-    }
-    template <std::enable_if_t<std::is_void_v<Optional<void>>, int> = 0>[[nodiscard]] Check mode() const noexcept {
-        return *magic_enum::enum_cast<Check>(this->get_node()->next_attribute("mode")->value());
+    [[nodiscard]] auto check() const noexcept {
+        if constexpr (std::is_void_v<Optional<void>>)
+            return *magic_enum::enum_cast<Check>(this->get_node()->first_attribute("mode")->value());
+        const auto check_attr = this->get_node()->first_attribute("mode");
+        return check_attr ? magic_enum::enum_cast<Check>(check_attr->value()) : std::optional<Check>{std::nullopt};
     }
 };
 
@@ -122,7 +118,6 @@ struct Feature : public Node {
     };
 
     [[nodiscard]] Policy policy() const noexcept { return *magic_enum::enum_cast<Policy>(node->first_attribute("policy")->value()); }
-
     [[nodiscard]] String name() const noexcept { return String{node->first_attribute("name")}; }
 };
 
