@@ -8,7 +8,6 @@ include_directories (thirdparty/gsl/include
         thirdparty/rapidxml_ns
         thirdparty/rapidjson/include
         include)
-add_executable (virtxml_ag_assist virtxml_autogen_assist.cpp)
 
 include (WA-ICEs) # Workarouds for known ICEs on certain compiler versions
 
@@ -72,7 +71,7 @@ if (Boost_FOUND AND LibVirt_FOUND)
             include/cexpr_algs.hpp
             include/flatmap.hpp
             include/json_utils.hpp
-            include/urlparser.hpp include/virtxml/domain.hpp include/virtxml/cpu_types.hpp include/virtxml/storage.hpp include/virtxml/device.hpp)
+            include/urlparser.hpp include/virtxml/domain.hpp include/virtxml/cpu_types.hpp include/virtxml/storage.hpp include/virtxml/device.hpp include/virtxml/secret.hpp)
 
     target_link_libraries (HE_debug ${Boost_LIBRARIES} ${LibVirt_LIBRARIES} pthread )
     if (WIN32)
