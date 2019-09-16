@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 3.12)
-project (HeavyEyelid)
+project(virthttp)
 
 set (CMAKE_CXX_STANDARD 17)
 set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/CMake/Modules/")
@@ -62,6 +62,7 @@ if (Boost_FOUND AND LibVirt_FOUND)
             include/virtxml/virtxml.hpp
             include/virtxml/xmlspan.hpp
             include/virtxml/xmlval.hpp
+            include/virtxml/device.hpp
             include/wrapper/actions_table.hpp
             include/wrapper/config.hpp
             include/wrapper/handler.hpp
@@ -71,7 +72,7 @@ if (Boost_FOUND AND LibVirt_FOUND)
             include/cexpr_algs.hpp
             include/flatmap.hpp
             include/json_utils.hpp
-            include/urlparser.hpp include/virtxml/domain.hpp include/virtxml/cpu_types.hpp include/virtxml/storage.hpp include/virtxml/network.hpp)
+            include/urlparser.hpp include/virtxml/domain.hpp include/virtxml/cpu_types.hpp include/virtxml/storage.hpp include/virtxml/device.hpp)
 
     target_link_libraries (HE_debug ${Boost_LIBRARIES} ${LibVirt_LIBRARIES} pthread )
     if (WIN32)
