@@ -735,6 +735,13 @@ struct Domain : private Node {
                 usb,
             };
 
+            struct Ip : public Node {
+                [[nodiscard]] String address() const noexcept { return String{node->first_attribute("address")}; }
+                [[nodiscard]] Optional<String> family() const noexcept { return String{node->first_attribute("family")}; }
+                [[nodiscard]] Optional<Integral> prefix() const noexcept { return Integral{node->first_attribute("prefix")}; }
+                [[nodiscard]] Optional<String> peer() const noexcept { return String{node->first_attribute("peer")}; }
+            };
+
             struct Source : public Node, public HasMacTableManager<Source, Optional> {
                 enum class VhostUserType {
                     unix_,
@@ -750,12 +757,6 @@ struct Domain : private Node {
                     passthrough,
                 };
 
-                struct Ip : public Node {
-                    [[nodiscard]] String address() const noexcept { return String{node->first_attribute("address")}; }
-                    [[nodiscard]] Optional<String> family() const noexcept { return String{node->first_attribute("family")}; }
-                    [[nodiscard]] Optional<Integral> prefix() const noexcept { return Integral{node->first_attribute("prefix")}; }
-                    [[nodiscard]] Optional<String> peer() const noexcept { return String{node->first_attribute("peer")}; }
-                };
                 struct Route : public Node {
                     [[nodiscard]] Optional<String> family() const noexcept { return String{node->first_attribute("family")}; }
                     [[nodiscard]] String address() const noexcept { return String{node->first_attribute("address")}; }
@@ -767,6 +768,29 @@ struct Domain : private Node {
                 struct UdpLocal : public Node {
                     [[nodiscard]] Optional<String> address() const noexcept { return String{node->first_attribute("address")}; }
                     [[nodiscard]] Optional<Integral> port() const noexcept { return Integral{node->first_attribute("port")}; }
+                };
+                struct Vendor : public Node {
+                    [[nodiscard]] Integral id() const noexcept { return Integral{node->first_attribute("id")}; }
+                };
+                struct Product : public Node {
+                    [[nodiscard]] Integral id() const noexcept { return Integral{node->first_attribute("id")}; }
+                };
+                struct HostdevAddress : public Node {
+                    enum class Type {
+                        pci,
+                        usb,
+                    };
+
+                    [[nodiscard]] Type type() const noexcept { return *magic_enum::enum_cast<Type>(node->first_attribute("type")->value()); }
+                    [[nodiscard]] Optional<Integral> usb_bus() const noexcept { return Integral{node->first_attribute("bus")}; }
+                    [[nodiscard]] Optional<Integral> usb_device() const noexcept { return Integral{node->first_attribute("device")}; }
+                    [[nodiscard]] Optional<Integral> pci_domain() const noexcept { return Integral{node->first_attribute("domain")}; }
+                    [[nodiscard]] Optional<Integral> pci_bus() const noexcept { return Integral{node->first_attribute("bus")}; }
+                    [[nodiscard]] Optional<String> pci_function() const noexcept { return String{node->first_attribute("domain")}; }
+                    [[nodiscard]] std::optional<bool> pci_multifunction() const noexcept {
+                        const auto mf_attr = node->first_attribute("multifunction");
+                        return mf_attr ? std::optional{static_cast<bool>(*magic_enum::enum_cast<OnOff>(mf_attr->value()))} : std::nullopt;
+                    }
                 };
 
                 [[nodiscard]] Optional<String> bridge() const noexcept { return String{node->first_attribute("bridge")}; }
@@ -797,6 +821,127 @@ struct Domain : private Node {
                     const auto attr = node->first_attribute("missing");
                     return attr ? std::optional{static_cast<bool>(*magic_enum::enum_cast<YesNo>(attr->value()))} : std::nullopt;
                 }
+                [[nodiscard]] Optional<Vendor> hostdev_vendor() const noexcept { return Vendor{node->first_node("vendor")}; }
+                [[nodiscard]] Optional<Product> hostdev_product() const noexcept { return Product{node->first_node("product")}; }
+                [[nodiscard]] Optional<HostdevAddress> hostdev_address() const noexcept { return HostdevAddress{node->first_node("address")}; }
+            };
+            struct Link : public Node {
+                enum class State : bool {
+                    down = false,
+                    up = true,
+                };
+                [[nodiscard]] State state() const noexcept { return *magic_enum::enum_cast<State>(node->first_attribute("state")->value()); }
+            };
+            struct Mtu : public Node {
+                [[nodiscard]] Integral size() const noexcept { return Integral{node->first_attribute("size")}; }
+            };
+            struct Coalesce : public Node {
+                struct Rx : public Node {
+                    struct Frames : public Node {
+                        [[nodiscard]] Optional<Integral> max() const noexcept { return Integral{node->first_attribute("max")}; }
+                    };
+                    [[nodiscard]] Optional<Frames> frames() const noexcept { return Frames{node->first_node("frames")}; }
+                };
+                [[nodiscard]] Optional<Rx> rx() const noexcept { return Rx{node->first_node("rx")}; }
+            };
+            struct Target : public Node {
+                [[nodiscard]] String dev() const noexcept { return String{node->first_attribute("dev")}; }
+            };
+            struct Guest : public Node {
+                [[nodiscard]] Optional<String> dev() const noexcept { return String{node->first_attribute("dev")}; }
+                [[nodiscard]] Optional<String> actual() const noexcept { return String{node->first_attribute("actual")}; }
+            };
+            struct Mac : public Node {
+                [[nodiscard]] String address() const noexcept { return String{node->first_attribute("address")}; }
+            };
+            struct Script : public Node {
+                [[nodiscard]] String path() const noexcept { return String{node->first_attribute("path")}; }
+            };
+            struct BackendDomain : public Node {
+                [[nodiscard]] String name() const noexcept { return String{node->first_attribute("name")}; }
+            };
+            struct Model : public Node {
+                [[nodiscard]] String type() const noexcept { return String{node->first_attribute("type")}; }
+            };
+            struct Backend : public Node {
+                [[nodiscard]] Optional<String> tap() const noexcept { return String{node->first_attribute("tap")}; }
+                [[nodiscard]] Optional<String> vhost() const noexcept { return String{node->first_attribute("vhost")}; }
+            };
+            struct Driver : public Node {
+                enum class Name {
+                    kvm,
+                    vfio,
+                    xen,
+                    qemu,
+                    vhost,
+                };
+                enum class TxMode {
+                    iothread,
+                    timer,
+                };
+
+                struct Guest : public Node {
+                    [[nodiscard]] std::optional<bool> csum() const noexcept {
+                        const auto attr = node->first_attribute("csum");
+                        return attr ? std::optional{static_cast<bool>(*magic_enum::enum_cast<OnOff>(attr->value()))} : std::nullopt;
+                    }
+                    [[nodiscard]] std::optional<bool> tso4() const noexcept {
+                        const auto attr = node->first_attribute("tso4");
+                        return attr ? std::optional{static_cast<bool>(*magic_enum::enum_cast<OnOff>(attr->value()))} : std::nullopt;
+                    }
+                    [[nodiscard]] std::optional<bool> tso6() const noexcept {
+                        const auto attr = node->first_attribute("tso6");
+                        return attr ? std::optional{static_cast<bool>(*magic_enum::enum_cast<OnOff>(attr->value()))} : std::nullopt;
+                    }
+                    [[nodiscard]] std::optional<bool> ecn() const noexcept {
+                        const auto attr = node->first_attribute("ecn");
+                        return attr ? std::optional{static_cast<bool>(*magic_enum::enum_cast<OnOff>(attr->value()))} : std::nullopt;
+                    }
+                    [[nodiscard]] std::optional<bool> ufo() const noexcept {
+                        const auto attr = node->first_attribute("ufo");
+                        return attr ? std::optional{static_cast<bool>(*magic_enum::enum_cast<OnOff>(attr->value()))} : std::nullopt;
+                    }
+                };
+                struct Host : public Guest {
+                    [[nodiscard]] std::optional<bool> gso() const noexcept {
+                        const auto attr = node->first_attribute("gso");
+                        return attr ? std::optional{static_cast<bool>(*magic_enum::enum_cast<OnOff>(attr->value()))} : std::nullopt;
+                    }
+                    [[nodiscard]] std::optional<bool> mrg_rxbuf() const noexcept {
+                        const auto attr = node->first_attribute("mrg_rxbuf");
+                        return attr ? std::optional{static_cast<bool>(*magic_enum::enum_cast<OnOff>(attr->value()))} : std::nullopt;
+                    }
+                };
+
+                [[nodiscard]] std::optional<Name> name() const noexcept {
+                    const auto track_attr = node->first_attribute("name");
+                    return track_attr ? magic_enum::enum_cast<Name>(track_attr->value()) : std::nullopt;
+                }
+                [[nodiscard]] Optional<Integral> queues() const noexcept { return Integral{node->first_attribute("queues")}; }
+                [[nodiscard]] Optional<Integral> rx_queue_size() const noexcept { return Integral{node->first_attribute("rx_queue_size")}; }
+                [[nodiscard]] Optional<Integral> tx_queue_size() const noexcept { return Integral{node->first_attribute("tx_queue_size")}; }
+                [[nodiscard]] std::optional<TxMode> tx_mode() const noexcept {
+                    const auto track_attr = node->first_attribute("txmode");
+                    return track_attr ? magic_enum::enum_cast<TxMode>(track_attr->value()) : std::nullopt;
+                }
+                [[nodiscard]] std::optional<bool> ioeventfd() const noexcept {
+                    const auto attr = node->first_attribute("ioeventfd");
+                    return attr ? std::optional{static_cast<bool>(*magic_enum::enum_cast<OnOff>(attr->value()))} : std::nullopt;
+                }
+                [[nodiscard]] std::optional<bool> event_idx() const noexcept {
+                    const auto attr = node->first_attribute("event_idx");
+                    return attr ? std::optional{static_cast<bool>(*magic_enum::enum_cast<OnOff>(attr->value()))} : std::nullopt;
+                }
+                [[nodiscard]] std::optional<bool> iommu() const noexcept {
+                    const auto iommu_attr = node->first_attribute("iommu");
+                    return iommu_attr ? std::optional{static_cast<bool>(*magic_enum::enum_cast<OnOff>(iommu_attr->value()))} : std::nullopt;
+                }
+                [[nodiscard]] std::optional<bool> ats() const noexcept {
+                    const auto ats_attr = node->first_attribute("ats");
+                    return ats_attr ? std::optional{static_cast<bool>(*magic_enum::enum_cast<OnOff>(ats_attr->value()))} : std::nullopt;
+                }
+                [[nodiscard]] Optional<Host> host() const noexcept { return Host{node->first_node("host")}; }
+                [[nodiscard]] Optional<Guest> guest() const noexcept { return Guest{node->first_node("guest")}; }
             };
 
             [[nodiscard]] Type type() const noexcept { return *magic_enum::enum_cast<Type>(node->first_attribute("type")->value()); }
@@ -805,73 +950,60 @@ struct Domain : private Node {
                 const auto attr = node->first_attribute("managed");
                 return attr ? std::optional{static_cast<bool>(*magic_enum::enum_cast<YesNo>(attr->value()))} : std::nullopt;
             }
+
+            [[nodiscard]] Optional<VirtualPort> virtual_port() const noexcept { return VirtualPort{node->first_node("virtualport")}; }
+            [[nodiscard]] Optional<Link> link() const noexcept { return Link{node->first_node("link")}; }
+            [[nodiscard]] Optional<Mtu> mtu() const noexcept { return Mtu{node->first_node("mtu")}; }
+            [[nodiscard]] Optional<Coalesce> coalesce() const noexcept { return Coalesce{node->first_node("coalesce")}; }
+            [[nodiscard]] Optional<Target> target() const noexcept { return Target{node->first_node("target")}; }
+            [[nodiscard]] Optional<Guest> guest() const noexcept { return Guest{node->first_node("guest")}; }
+            [[nodiscard]] Optional<Mac> mac() const noexcept { return Mac{node->first_node("mac")}; }
+            [[nodiscard]] NamedSpan<Ip> ips() const noexcept { return NamedSpan<Ip>{"ip", node}; }
+            [[nodiscard]] Optional<Script> script() const noexcept { return Script{node->first_node("script")}; }
+            [[nodiscard]] Optional<BackendDomain> backend_domain() const noexcept { return BackendDomain{node->first_node("backenddomain")}; }
+            [[nodiscard]] Optional<Model> model() const noexcept { return Model{node->first_node("model")}; }
+            [[nodiscard]] Optional<Backend> backend() const noexcept { return Backend{node->first_node("backend")}; }
+            [[nodiscard]] Optional<Driver> driver() const noexcept { return Driver{node->first_node("driver")}; }
+            [[nodiscard]] Optional<String> name() const noexcept {
+                return String{node->first_node("alias")};
+            } // FIXME // ALL OCCURENCES OF name() MUST BE CHECKED FOR ALIAS CASE
             /*
     <element name="interface">
-      <choice>
-        <group> // bridge
-          <interleave>
-            <optional>
-              <ref name="virtualPortProfile"/>
-            </optional>
-            <ref name="interface-options"/>
-          </interleave>
-        </group>
-        <group> // hostdev
-          <interleave>
-            <element name="source">
-              <choice>
-                <group>
-                  <element name="vendor">
-                      <attribute name="id">
-                        <ref name="usbId"/>
-                      </attribute>
-                    </element>
-                    <element name="product">
-                      <attribute name="id">
-                        <ref name="usbId"/>
-                      </attribute>
-                    </element>
-                  <optional>
-                      <element name="address">
-                        <attribute name="bus">
-                          <ref name="usbAddr"/>
-                        </attribute>
-                        <attribute name="device">
-                          <ref name="usbPort"/>
-                        </attribute>
-                      </element>
-                  </optional>
-                </group>
-                <element name="address">
-                  <choice>
-                    <group>
-                      <attribute name="type">
-                        <value>pci</value>
-                      </attribute>
-                      <ref name="pciaddress"/>
-                    </group>
-                    <group>
-                      <attribute name="type">
-                        <value>usb</value>
-                      </attribute>
-                      <attribute name="bus">
-                        <ref name="usbAddr"/>
-                      </attribute>
-                      <attribute name="device">
-                        <ref name="usbPort"/>
-                      </attribute>
-                    </group>
-                  </choice>
-                </element>
-              </choice>
+      <interleave>
+          <optional>
+            <ref name="alias"/>
+          </optional>
+          <optional>
+            <ref name="address"/>
+          </optional>
+          <optional>
+            <element name="filterref">
+              <ref name="filterref-node-attributes"/>
             </element>
-            <optional>
-              <ref name="virtualPortProfile"/>
-            </optional>
-            <ref name="interface-options"/>
-          </interleave>
-        </group>
-      </choice>
+          </optional>
+          <optional>
+            <element name="tune">
+              <optional>
+                <!-- size of send buffer for network tap devices -->
+                <element name="sndbuf">
+                  <ref name="unsignedInt"/>
+                </element>
+              </optional>
+            </element>
+          </optional>
+          <optional>
+            <ref name="deviceBoot"/>
+          </optional>
+          <optional>
+            <ref name="rom"/>
+          </optional>
+          <optional>
+            <ref name="bandwidth"/>
+          </optional>
+          <optional>
+            <ref name="vlan"/>
+          </optional>
+        </interleave>
       <optional>
         <attribute name="trustGuestRxFilters">
           <ref name="virYesNo"/>
