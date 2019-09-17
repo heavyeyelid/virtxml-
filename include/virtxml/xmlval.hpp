@@ -26,6 +26,10 @@ struct String : public Value {
 #endif
 };
 
+struct Alias : public Node {
+    [[nodiscard]] String name() const noexcept { return String{node->first_attribute("name")}; }
+};
+
 struct StringNode : public Node {
 #if 1 /* With functions */
     inline explicit operator std::string_view() const noexcept { return {node->value(), node->value_size()}; }

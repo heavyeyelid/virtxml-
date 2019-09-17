@@ -14,6 +14,29 @@
 namespace virtxml {
 inline namespace {
 
+enum class StartupPolicy {
+    mandatory,
+    requisite,
+    optional,
+};
+
+enum class SgIO {
+    filtered,
+    unfiltered,
+};
+
+struct Boot : public Node {
+    [[nodiscard]] Integral order() const noexcept { return Integral{node->first_attribute("order")}; }
+    [[nodiscard]] Optional<String> loadparm() const noexcept { return String{node->first_attribute("loadparm")}; }
+};
+
+struct Rom : public Node {
+    [[nodiscard]] std::optional<bool> bar() const noexcept {
+        const auto attr = node->first_attribute("bar");
+        return attr ? std::optional{static_cast<bool>(*magic_enum::enum_cast<OnOff>(attr->value()))} : std::nullopt;
+    }
+    [[nodiscard]] Optional<String> file() const noexcept { return String{node->first_attribute("file")}; }
+};
 struct Reconnect : public Node {
     [[nodiscard]] bool enabled() const noexcept { return static_cast<bool>(*magic_enum::enum_cast<YesNo>(node->first_attribute("enabled"))); }
     [[nodiscard]] Optional<Integral> timeout() const noexcept { return Integral{node->first_attribute("timeout")}; }
@@ -387,10 +410,6 @@ struct Domain : private Node {
                 network,
                 volume,
             };
-            enum class SgIO {
-                filtered,
-                unfiltered,
-            };
             struct Snapshot : public Node {
                 [[nodiscard]] String name() const noexcept { return String{node->first_attribute("name")}; }
             };
@@ -618,7 +637,7 @@ struct Domain : private Node {
             };
 
             [[nodiscard]] Optional<Integral> index() const noexcept { return Integral{node->first_attribute("index")}; }
-            [[nodiscard]] Optional<String> name() const noexcept { return String{node->first_attribute("index")}; }
+            [[nodiscard]] Optional<Alias> alias() const noexcept { return Alias{node->first_node("alias")}; }
             [[nodiscard]] Optional<Address> address() const noexcept { return Address{node->first_node("address")}; }
             [[nodiscard]] Type type() const noexcept { return *magic_enum::enum_cast<Type>(node->first_attribute("type")->value()); }
             [[nodiscard]] std::optional<Model> model() const noexcept {
@@ -712,7 +731,7 @@ struct Domain : private Node {
                 return am_attr ? magic_enum::enum_cast<AccessMode>(am_attr->value()) : std::nullopt;
             }
             [[nodiscard]] bool readonly() const noexcept { return node->first_node("readonly") != nullptr; }
-            [[nodiscard]] Optional<String> name() const noexcept { return String{node->first_attribute("name")}; }
+            [[nodiscard]] Optional<Alias> alias() const noexcept { return Alias{node->first_node("alias")}; }
             [[nodiscard]] Optional<Address> address() const noexcept { return Address{node->first_node("address")}; }
             [[nodiscard]] Optional<SpaceLimit> hard_space_limit() const noexcept { return SpaceLimit{node->first_node("hard_space_limit")}; }
             [[nodiscard]] Optional<SpaceLimit> soft_space_limit() const noexcept { return SpaceLimit{node->first_node("soft_space_limit")}; }
@@ -943,6 +962,18 @@ struct Domain : private Node {
                 [[nodiscard]] Optional<Host> host() const noexcept { return Host{node->first_node("host")}; }
                 [[nodiscard]] Optional<Guest> guest() const noexcept { return Guest{node->first_node("guest")}; }
             };
+            struct Tune : public Node {
+                [[nodiscard]] Optional<Integral> sndbuf() const noexcept { return Integral{node->first_node("sndbuf")}; }
+            };
+            struct FilterRef : public Node {
+                struct Parameter : public Node {
+                    [[nodiscard]] String name() const noexcept { return String{node->first_attribute("name")}; }
+                    [[nodiscard]] String value() const noexcept { return String{node->first_attribute("value")}; }
+                };
+
+                [[nodiscard]] String nc_name() const noexcept { return String{node->first_attribute("NCName")}; }
+                [[nodiscard]] NamedSpan<Parameter> parameters() const noexcept { return NamedSpan<Parameter>{"parameter", node}; }
+            };
 
             [[nodiscard]] Type type() const noexcept { return *magic_enum::enum_cast<Type>(node->first_attribute("type")->value()); }
             [[nodiscard]] Optional<Source> source() const noexcept { return Source{node->first_node("source")}; }
@@ -950,7 +981,6 @@ struct Domain : private Node {
                 const auto attr = node->first_attribute("managed");
                 return attr ? std::optional{static_cast<bool>(*magic_enum::enum_cast<YesNo>(attr->value()))} : std::nullopt;
             }
-
             [[nodiscard]] Optional<VirtualPort> virtual_port() const noexcept { return VirtualPort{node->first_node("virtualport")}; }
             [[nodiscard]] Optional<Link> link() const noexcept { return Link{node->first_node("link")}; }
             [[nodiscard]] Optional<Mtu> mtu() const noexcept { return Mtu{node->first_node("mtu")}; }
@@ -964,52 +994,270 @@ struct Domain : private Node {
             [[nodiscard]] Optional<Model> model() const noexcept { return Model{node->first_node("model")}; }
             [[nodiscard]] Optional<Backend> backend() const noexcept { return Backend{node->first_node("backend")}; }
             [[nodiscard]] Optional<Driver> driver() const noexcept { return Driver{node->first_node("driver")}; }
-            [[nodiscard]] Optional<String> name() const noexcept {
-                return String{node->first_node("alias")};
-            } // FIXME // ALL OCCURENCES OF name() MUST BE CHECKED FOR ALIAS CASE
+            [[nodiscard]] Optional<Alias> alias() const noexcept { return Alias{node->first_node("alias")}; }
+            [[nodiscard]] Optional<Address> address() const noexcept { return Address{node->first_node("address")}; }
+            [[nodiscard]] Optional<FilterRef> filter_ref() const noexcept { return FilterRef{node->first_node("filterref")}; }
+            [[nodiscard]] Optional<Tune> tune() const noexcept { return Tune{node->first_node("tune")}; }
+            [[nodiscard]] Optional<Boot> boot() const noexcept { return Boot{node->first_node("boot")}; }
+            [[nodiscard]] Optional<Rom> rom() const noexcept { return Rom{node->first_node("rom")}; }
+            [[nodiscard]] Optional<Bandwidth> bandwidth() const noexcept { return Bandwidth{node->first_node("bandwidth")}; }
+            [[nodiscard]] Optional<Vlan> vlan() const noexcept { return Vlan{node->first_node("vlan")}; }
+            [[nodiscard]] std::optional<bool> trust_guest_rx_filters() const noexcept {
+                const auto attr = node->first_attribute("trustGuestRxFilters");
+                return attr ? std::optional{static_cast<bool>(*magic_enum::enum_cast<YesNo>(attr->value()))} : std::nullopt;
+            }
+        };
+        struct Input : public Node {
+            enum class Type {
+                tablet,
+                mouse,
+                keyboard,
+                passthrough,
+            };
+            enum class Bus {
+                ps2,
+                usb,
+                xen,
+                virtio,
+            };
+
+            struct Driver : public Node {
+                [[nodiscard]] std::optional<bool> iommu() const noexcept {
+                    const auto iommu_attr = node->first_attribute("iommu");
+                    return iommu_attr ? std::optional{static_cast<bool>(*magic_enum::enum_cast<OnOff>(iommu_attr->value()))} : std::nullopt;
+                }
+                [[nodiscard]] std::optional<bool> ats() const noexcept {
+                    const auto ats_attr = node->first_attribute("ats");
+                    return ats_attr ? std::optional{static_cast<bool>(*magic_enum::enum_cast<OnOff>(ats_attr->value()))} : std::nullopt;
+                }
+            };
+            struct Source : public Node {
+                [[nodiscard]] String evdev() const noexcept { return String{node->first_attribute("evdev")}; }
+            };
+
+            [[nodiscard]] Optional<Driver> driver() const noexcept { return Driver{node->first_node("driver")}; }
+            [[nodiscard]] Type type() const noexcept { return *magic_enum::enum_cast<Type>(node->first_attribute("type")->value()); }
+            [[nodiscard]] Bus bus() const noexcept { return *magic_enum::enum_cast<Bus>(node->first_attribute("bus")->value()); }
+            [[nodiscard]] Optional<Source> source() const noexcept { return Source{node->first_node("source")}; }
+            [[nodiscard]] Optional<Alias> alias() const noexcept { return Alias{node->first_node("alias")}; }
+            [[nodiscard]] Optional<Address> address() const noexcept { return Address{node->first_node("address")}; }
+        };
+        struct Sound : public Node {
+            enum class Model {
+                sb16,
+                es1370,
+                pcspk,
+                ac97,
+                ich6,
+                ich9,
+                usb,
+            };
+
+            struct Codec : public Node {
+                enum class Type {
+                    duplex,
+                    mirco,
+                };
+
+                [[nodiscard]] Type type() const noexcept { return *magic_enum::enum_cast<Type>(node->first_attribute("type")->value()); }
+            };
+
+            [[nodiscard]] Model model() const noexcept { return *magic_enum::enum_cast<Model>(node->first_attribute("model")->value()); }
+            [[nodiscard]] Optional<Alias> alias() const noexcept { return Alias{node->first_node("alias")}; }
+            [[nodiscard]] Optional<Address> address() const noexcept { return Address{node->first_node("address")}; }
+            [[nodiscard]] NamedSpan<Codec> codecs() const noexcept { return NamedSpan<Codec>{"codec", node}; }
+        };
+        struct HostDev : public Node {
+            enum class Mode {
+                subsystem,
+                capabilities,
+            };
+            enum class Type {
+                pci,
+                usb,
+                scsi,
+                scsi_host,
+                mdev,
+            };
+
+            struct Driver : public Node {
+                enum class Name {
+                    kvm,
+                    vfio,
+                    xen,
+                };
+
+                [[nodiscard]] Name name() const noexcept { return *magic_enum::enum_cast<Name>(node->first_attribute("name")->value()); }
+            };
+            struct Source : public Node {
+                enum class Protocol {
+                    adapter,
+                    iscsi,
+                };
+
+                struct Address : public Node {
+                    [[nodiscard]] Optional<Integral> domain() const noexcept { return Integral{node->first_attribute("domain")}; }
+                    [[nodiscard]] Optional<Integral> bus() const noexcept { return Integral{node->first_attribute("bus")}; }
+                    [[nodiscard]] Optional<String> function() const noexcept { return String{node->first_attribute("domain")}; }
+                    [[nodiscard]] std::optional<bool> multifunction() const noexcept {
+                        const auto mf_attr = node->first_attribute("multifunction");
+                        return mf_attr ? std::optional{static_cast<bool>(*magic_enum::enum_cast<OnOff>(mf_attr->value()))} : std::nullopt;
+                    }
+                };
+                struct Vendor : public Node {
+                    [[nodiscard]] Integral id() const noexcept { return Integral{node->first_attribute("id")}; }
+                };
+                struct Product : public Node {
+                    [[nodiscard]] Integral id() const noexcept { return Integral{node->first_attribute("id")}; }
+                };
+                struct UsbAddress : public Node {
+                    enum class Type {
+                        pci,
+                        usb,
+                    };
+
+                    [[nodiscard]] Type type() const noexcept { return *magic_enum::enum_cast<Type>(node->first_attribute("type")->value()); }
+                    [[nodiscard]] Optional<Integral> bus() const noexcept { return Integral{node->first_attribute("bus")}; }
+                    [[nodiscard]] Optional<Integral> usb_device() const noexcept { return Integral{node->first_attribute("device")}; }
+                    [[nodiscard]] Optional<Integral> scsi_target() const noexcept { return Integral{node->first_attribute("target")}; }
+                    [[nodiscard]] Optional<String> scsi_unit() const noexcept { return String{node->first_attribute("uint")}; }
+                };
+                [[nodiscard]] std::optional<StartupPolicy> startup_policy() const noexcept {
+                    const auto attr = node->first_attribute("startupPolicy");
+                    return attr ? magic_enum::enum_cast<StartupPolicy>(attr->value()) : std::nullopt;
+                }
+                [[nodiscard]] std::optional<Protocol> protocol() const noexcept {
+                    const auto attr = node->first_attribute("protocol");
+                    return attr ? magic_enum::enum_cast<Protocol>(attr->value()) : std::nullopt;
+                }
+            };
+
+            [[nodiscard]] std::optional<Mode> mode() const noexcept {
+                const auto attr = node->first_attribute("mode");
+                return attr ? magic_enum::enum_cast<Mode>(attr->value()) : std::nullopt;
+            }
+            [[nodiscard]] std::optional<bool> managed() const noexcept {
+                const auto attr = node->first_attribute("managed");
+                return attr ? std::optional{static_cast<bool>(*magic_enum::enum_cast<YesNo>(attr->value()))} : std::nullopt;
+            }
+            [[nodiscard]] Type type() const noexcept { return *magic_enum::enum_cast<Type>(node->first_attribute("type")->value()); }
+            [[nodiscard]] Optional<Driver> driver() const noexcept { return Driver{node->first_node("driver")}; }
+            [[nodiscard]] Optional<Source> source() const noexcept { return Source{node->first_node("source")}; }
+            [[nodiscard]] std::optional<SgIO> sg_io() const noexcept {
+                const auto sgio_attr = node->first_attribute("sgio");
+                return sgio_attr ? magic_enum::enum_cast<SgIO>(sgio_attr->value()) : std::nullopt;
+            }
+            [[nodiscard]] std::optional<bool> raw_io() const noexcept {
+                const auto rio_attr = node->first_attribute("raw_io");
+                return rio_attr ? std::optional{static_cast<bool>(*magic_enum::enum_cast<YesNo>(rio_attr->value()))} : std::nullopt;
+            }
             /*
-    <element name="interface">
-      <interleave>
-          <optional>
-            <ref name="alias"/>
-          </optional>
-          <optional>
-            <ref name="address"/>
-          </optional>
-          <optional>
-            <element name="filterref">
-              <ref name="filterref-node-attributes"/>
+             <element name="hostdev">
+              <interleave>
+                <choice>
+                  <group>
+                    <choice>
+                      <group>
+                        <element name="source">
+                          <choice>
+                            <group>  <!-- scsi_host adapter -->
+                              <interleave>
+                                <ref name="sourceinfoadapter"/>
+                              </interleave>
+                            </group>
+                            <group>  <!-- iscsi adapter -->
+                              <attribute name="name">
+                                <text/>
+                              </attribute>
+                              <interleave>
+                                <oneOrMore>
+                                  <element name='host'>
+                                    <attribute name='name'>
+                                      <text/>
+                                    </attribute>
+                                    <optional>
+                                      <attribute name='port'>
+                                        <ref name="PortNumber"/>
+                                      </attribute>
+                                    </optional>
+                                    <empty/>
+                                  </element>
+                                </oneOrMore>
+                                <optional>
+                                  <ref name='diskAuth'/>
+                                </optional>
+                              </interleave>
+                            </group>
+                          </choice>
+                        </element>
+                      </group>
+                      <group>
+                        <element name="source">
+                          <choice>
+                            <group>
+                              <attribute name="protocol">
+                                <value>vhost</value>     <!-- vhost, required -->
+                              </attribute>
+                              <attribute name="wwpn">
+                                <data type="string">
+                                  <param name="pattern">(naa\.)[0-9a-fA-F]{16}</param>
+                                </data>
+                              </attribute>
+                            </group>
+                          </choice>
+                        </element>
+                      </group>
+                      <group>
+                        <attribute name="model">
+                          <choice>
+                            <value>vfio-pci</value>
+                            <value>vfio-ap</value>
+                          </choice>
+                        </attribute>
+                        <element name="source">
+                          <ref name="mdevaddress"/>
+                        </element>
+                      </group>
+                    </choice>
+                  </group>
+                  <group>
+                    <choice>
+                      <group>
+                        <ref name="hostdevcapsstorage"/>
+                      </group>
+                      <group>
+                        <ref name="hostdevcapsmisc"/>
+                      </group>
+                      <group>
+                        <ref name="hostdevcapsnet"/>
+                      </group>
+                    </choice>
+                  </group>
+                </choice>
+                <optional>
+                  <ref name="alias"/>
+                </optional>
+                <optional>
+                  <ref name="deviceBoot"/>
+                </optional>
+                <optional>
+                  <ref name="rom"/>
+                </optional>
+                <optional>
+                  <ref name="address"/>
+                </optional>
+                <optional>
+                  <element name="readonly">
+                    <empty/>
+                  </element>
+                </optional>
+                <optional>
+                  <element name="shareable">
+                    <empty/>
+                  </element>
+                </optional>
+              </interleave>
             </element>
-          </optional>
-          <optional>
-            <element name="tune">
-              <optional>
-                <!-- size of send buffer for network tap devices -->
-                <element name="sndbuf">
-                  <ref name="unsignedInt"/>
-                </element>
-              </optional>
-            </element>
-          </optional>
-          <optional>
-            <ref name="deviceBoot"/>
-          </optional>
-          <optional>
-            <ref name="rom"/>
-          </optional>
-          <optional>
-            <ref name="bandwidth"/>
-          </optional>
-          <optional>
-            <ref name="vlan"/>
-          </optional>
-        </interleave>
-      <optional>
-        <attribute name="trustGuestRxFilters">
-          <ref name="virYesNo"/>
-        </attribute>
-      </optional>
-    </element>
              * */
         };
         /*
@@ -1017,9 +1265,6 @@ struct Domain : private Node {
       <interleave>
         <zeroOrMore>
           <choice>
-            <ref name="interface"/>
-            <ref name="input"/>
-            <ref name="sound"/>
             <ref name="hostdev"/>
             <ref name="graphic"/>
             <ref name="video"/>
@@ -1060,6 +1305,9 @@ struct Domain : private Node {
         [[nodiscard]] NamedSpan<Controller> controllers() const noexcept { return NamedSpan<Controller>{"controller", node}; }
         [[nodiscard]] NamedSpan<Lease> leases() const noexcept { return NamedSpan<Lease>{"lease", node}; }
         [[nodiscard]] NamedSpan<Filesystem> filesystems() const noexcept { return NamedSpan<Filesystem>{"filesystem", node}; }
+        [[nodiscard]] NamedSpan<Interface> interfaces() const noexcept { return NamedSpan<Interface>{"interface", node}; }
+        [[nodiscard]] NamedSpan<Input> inputs() const noexcept { return NamedSpan<Input>{"input", node}; }
+        [[nodiscard]] NamedSpan<Sound> sounds() const noexcept { return NamedSpan<Sound>{"sound", node}; }
     };
     /*
      *<interleave>

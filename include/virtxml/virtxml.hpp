@@ -1,5 +1,6 @@
 #pragma once
 
+#include "basic.hpp"
 #include "capabilities.hpp"
 #include "device.hpp"
 #include "domain.hpp"
