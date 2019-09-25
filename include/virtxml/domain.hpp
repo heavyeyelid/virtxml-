@@ -1546,7 +1546,10 @@ struct Domain : private Node {
             [[nodiscard]] Optional<Address> address() const noexcept { return Address{node->first_node("address")}; }
         };
         struct Console : public QemuCharDev {
-            [[nodiscard]] std::optional<QemuCharDevType> type() const noexcept { return bool_wrap_attr<QemuCharDevType, Optional>(node, "type"); }
+            [[nodiscard]] std::optional<QemuCharDevType> type() const noexcept {
+                const auto attr = node->first_attribute("type");
+                return attr ? magic_enum::enum_cast<QemuCharDevType>(attr->value()) : std::nullopt;
+            }
         };
         struct Parallel : public QemuCharDev {};
 
