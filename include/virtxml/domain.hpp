@@ -1545,6 +1545,9 @@ struct Domain : private Node {
             [[nodiscard]] Optional<Alias> alias() const noexcept { return Alias{node->first_node("alias")}; }
             [[nodiscard]] Optional<Address> address() const noexcept { return Address{node->first_node("address")}; }
         };
+        struct Console : public QemuCharDev {
+            [[nodiscard]] std::optional<QemuCharDevType> type() const noexcept { return bool_wrap_attr<QemuCharDevType, Optional>(node, "type"); }
+        };
         struct Parallel : public QemuCharDev {};
 
         [[nodiscard]] Optional<Emulator> emulator() const noexcept { return Emulator{node->first_node("emulator")}; }
@@ -1558,7 +1561,7 @@ struct Domain : private Node {
         [[nodiscard]] NamedSpan<HostDev> hostdevs() const noexcept { return NamedSpan<HostDev>{"hostdev", node}; }
         [[nodiscard]] NamedSpan<Graphics> graphics() const noexcept { return NamedSpan<Graphics>{"graphics", node}; }
         [[nodiscard]] NamedSpan<Video> video() const noexcept { return NamedSpan<Video>{"video", node}; }
-        /// consoles
+        [[nodiscard]] NamedSpan<Console> console() const noexcept { return NamedSpan<Console>{"console", node}; }
         [[nodiscard]] NamedSpan<Parallel> parallels() const noexcept { return NamedSpan<Parallel>{"parallel", node}; }
     };
     /*
