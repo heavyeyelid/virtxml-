@@ -56,12 +56,18 @@ if (Boost_FOUND AND LibVirt_FOUND)
             include/virt_wrap/impl/Network.hpp
             include/virt_wrap/impl/TypedParams.hpp
             include/virt_wrap/impl/NodeDevice.hpp
+            include/virtxml/basic.hpp
             include/virtxml/capabilities.hpp
+            include/virtxml/cpu_types.hpp
+            include/virtxml/device.hpp
+            include/virtxml/domain.hpp
             include/virtxml/generic.hpp
+            include/virtxml/network.hpp
+            include/virtxml/secret.hpp
+            include/virtxml/storage.hpp
             include/virtxml/virtxml.hpp
             include/virtxml/xmlspan.hpp
             include/virtxml/xmlval.hpp
-            include/virtxml/device.hpp
             include/wrapper/actions_table.hpp
             include/wrapper/config.hpp
             include/wrapper/handler.hpp
@@ -71,7 +77,7 @@ if (Boost_FOUND AND LibVirt_FOUND)
             include/cexpr_algs.hpp
             include/flatmap.hpp
             include/json_utils.hpp
-            include/urlparser.hpp include/virtxml/domain.hpp include/virtxml/cpu_types.hpp include/virtxml/network.hpp include/virtxml/storage.hpp include/virtxml/device.hpp include/virtxml/secret.hpp)
+            include/urlparser.hpp)
 
     target_link_libraries (HE_debug ${Boost_LIBRARIES} ${LibVirt_LIBRARIES} pthread )
     if (WIN32)

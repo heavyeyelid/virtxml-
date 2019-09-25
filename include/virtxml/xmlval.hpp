@@ -1,6 +1,8 @@
 #pragma once
 
 #include <string_view>
+#include <gsl/gsl>
+#include <magic_enum.hpp>
 #include <rapidxml_ns.hpp>
 #include "generic.hpp"
 
@@ -94,4 +96,17 @@ struct Uuid : public String {
         return '0' - hexc;
     }
 };
+
+template <class E, template <class> class O = std::void_t> auto bool_wrap_attr(const xml_node<char>* node, gsl::czstring<> name) {
+    static_assert(std::is_same_v<std::underlying_type_t<E>, bool>, "Enum type must be have bool as its underlying type");
+    if constexpr (std::is_void_v<O<bool>>) {
+        return static_cast<bool>(*magic_enum::enum_cast<E>(node->first_attribute(name)->value()));
+    } else if constexpr (std::is_same_v<Optional<bool>, O<bool>>) {
+        const auto attr = node->first_attribute(name);
+        return attr ? std::optional{static_cast<bool>(*magic_enum::enum_cast<E>(attr->value()))} : std::nullopt;
+    } else {
+        static_assert(!std::is_void_v<E>, "O shall be default or Optional"); // always fail
+    }
+}
+
 } // namespace virtxml
