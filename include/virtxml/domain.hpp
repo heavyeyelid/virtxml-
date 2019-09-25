@@ -1432,44 +1432,6 @@ struct Domain : private Node {
             [[nodiscard]] Optional<Alias> alias() const noexcept { return Alias{node->first_node("alias")}; }
             [[nodiscard]] Optional<Address> address() const noexcept { return Address{node->first_node("address")}; }
         };
-        /*
-     <element name="devices">
-      <interleave>
-        <zeroOrMore>
-          <choice>
-            <ref name="console"/>
-            <ref name="parallel"/>
-            <ref name="serial"/>
-            <ref name="channel"/>
-            <ref name="smartcard"/>
-            <ref name="hub"/>
-            <ref name="redirdev"/>
-            <ref name="redirfilter"/>
-            <ref name="rng"/>
-            <ref name="tpm"/>
-            <ref name="shmem"/>
-            <ref name="memorydev"/>
-          </choice>
-        </zeroOrMore>
-        <optional>
-          <ref name="watchdog"/>
-        </optional>
-        <optional>
-          <ref name="memballoon"/>
-        </optional>
-        <optional>
-          <ref name="nvram"/>
-        </optional>
-        <zeroOrMore>
-          <ref name="panic"/>
-        </zeroOrMore>
-        <optional>
-          <ref name="iommu"/>
-        </optional>
-      </interleave>
-    </element>
-         * */
-
         struct QemuCharDev : public Node {
             struct Source : public Node {
                 [[nodiscard]] Optional<String> mode() const noexcept { return String{node->first_attribute("mode")}; }
@@ -1552,6 +1514,66 @@ struct Domain : private Node {
             }
         };
         struct Parallel : public QemuCharDev {};
+        struct Serial : public QemuCharDev {};
+        struct Channel : public Node {
+            struct Target : public Node {
+                enum class Type {
+                    guestfwd,
+                    virtio,
+                    xen,
+                };
+                enum class State : bool {
+                    connected = true,
+                    disconnected = false,
+                };
+
+                [[nodiscard]] Type type() const noexcept { return enum_wrap_attr<Type>(node, "type"); }
+                [[nodiscard]] Optional<String> address() const noexcept { return String{node->first_attribute("address")}; }
+                [[nodiscard]] Optional<String> port() const noexcept { return String{node->first_attribute("port")}; }
+                [[nodiscard]] Optional<String> name() const noexcept { return String{node->first_attribute("name")}; }
+                [[nodiscard]] std::optional<State> state() const noexcept { return enum_wrap_attr<State, Optional>(node, "state"); }
+            };
+
+            [[nodiscard]] QemuCharDevType type() const noexcept {
+                return *magic_enum::enum_cast<QemuCharDevType>(node->first_attribute("type")->value());
+            }
+            [[nodiscard]] NamedSpan<QemuCharDev::Source> sources() const noexcept { return NamedSpan<QemuCharDev::Source>{"source", node}; }
+            [[nodiscard]] Optional<Alias> alias() const noexcept { return Alias{node->first_node("alias")}; }
+            [[nodiscard]] Optional<Address> address() const noexcept { return Address{node->first_node("address")}; }
+        };
+        /*
+  <element name="devices">
+    <interleave>
+    <zeroOrMore>
+      <choice>
+        <ref name="smartcard"/>
+        <ref name="hub"/>
+        <ref name="redirdev"/>
+        <ref name="redirfilter"/>
+        <ref name="rng"/>
+        <ref name="tpm"/>
+        <ref name="shmem"/>
+        <ref name="memorydev"/>
+      </choice>
+    </zeroOrMore>
+    <optional>
+      <ref name="watchdog"/>
+    </optional>
+    <optional>
+      <ref name="memballoon"/>
+    </optional>
+    <optional>
+      <ref name="nvram"/>
+    </optional>
+    <zeroOrMore>
+      <ref name="panic"/>
+    </zeroOrMore>
+    <optional>
+      <ref name="iommu"/>
+    </optional>
+    </interleave>
+  </element>
+ * */
 
         [[nodiscard]] Optional<Emulator> emulator() const noexcept { return Emulator{node->first_node("emulator")}; }
         [[nodiscard]] NamedSpan<Disk> disks() const noexcept { return NamedSpan<Disk>{"disk", node}; }
@@ -1563,9 +1585,11 @@ struct Domain : private Node {
         [[nodiscard]] NamedSpan<Sound> sounds() const noexcept { return NamedSpan<Sound>{"sound", node}; }
         [[nodiscard]] NamedSpan<HostDev> hostdevs() const noexcept { return NamedSpan<HostDev>{"hostdev", node}; }
         [[nodiscard]] NamedSpan<Graphics> graphics() const noexcept { return NamedSpan<Graphics>{"graphics", node}; }
-        [[nodiscard]] NamedSpan<Video> video() const noexcept { return NamedSpan<Video>{"video", node}; }
-        [[nodiscard]] NamedSpan<Console> console() const noexcept { return NamedSpan<Console>{"console", node}; }
+        [[nodiscard]] NamedSpan<Video> videos() const noexcept { return NamedSpan<Video>{"video", node}; }
+        [[nodiscard]] NamedSpan<Console> consoles() const noexcept { return NamedSpan<Console>{"console", node}; }
         [[nodiscard]] NamedSpan<Parallel> parallels() const noexcept { return NamedSpan<Parallel>{"parallel", node}; }
+        [[nodiscard]] NamedSpan<Serial> serials() const noexcept { return NamedSpan<Serial>{"serial", node}; }
+        [[nodiscard]] NamedSpan<Channel> channels() const noexcept { return NamedSpan<Channel>{"channel", node}; }
     };
     /*
      *<interleave>

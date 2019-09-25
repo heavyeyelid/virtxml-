@@ -97,7 +97,21 @@ struct Uuid : public String {
     }
 };
 
-template <class E, template <class> class O = std::void_t> auto bool_wrap_attr(const xml_node<char>* node, gsl::czstring<> name) {
+template <class T> using void_once = std::void_t<T>;
+
+template <class E, template <class> class O = void_once> auto enum_wrap_attr(const xml_node<char>* node, gsl::czstring<> name) {
+    static_assert(std::is_enum_v<E>, "E must be an enum");
+    if constexpr (std::is_void_v<O<E>>) {
+        return *magic_enum::enum_cast<E>(node->first_attribute(name)->value());
+    } else if constexpr (std::is_same_v<Optional<E>, O<E>>) {
+        const auto attr = node->first_attribute(name);
+        return attr ? magic_enum::enum_cast<E>(attr->value()) : std::nullopt;
+    } else {
+        static_assert(!std::is_void_v<E>, "O shall be default or Optional"); // always fail
+    }
+}
+
+template <class E, template <class> class O = void_once> auto bool_wrap_attr(const xml_node<char>* node, gsl::czstring<> name) {
     static_assert(std::is_same_v<std::underlying_type_t<E>, bool>, "Enum type must be have bool as its underlying type");
     if constexpr (std::is_void_v<O<bool>>) {
         return static_cast<bool>(*magic_enum::enum_cast<E>(node->first_attribute(name)->value()));
