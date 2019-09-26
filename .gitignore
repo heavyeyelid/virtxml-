@@ -36,3 +36,5 @@ cmake-*
 build
 .idea
 .vscode
+
+docs/
