@@ -1452,6 +1452,19 @@ struct Domain : private Node {
                 [[nodiscard]] Optional<Reconnect> reconnect() const noexcept { return Reconnect{node->first_node("reconnect")}; }
                 [[nodiscard]] NamedSpan<SecLabel> seclabels() const noexcept { return NamedSpan<SecLabel>{"seclabel", node}; }
             };
+            struct Protocol : public Node {
+                enum class Type {
+                    raw,
+                    telnet,
+                    telnets,
+                    tls,
+                };
+                [[nodiscard]] Type type() const noexcept { return enum_wrap_attr<Type>(node, "type"); }
+            };
+            struct Log : public Node {
+                [[nodiscard]] String file() const noexcept { return String{node->first_attribute("file")}; }
+                [[nodiscard]] std::optional<bool> append() const noexcept { return bool_wrap_attr<OnOff, Optional>(node, "append"); }
+            };
             struct Target : public Node {
                 enum class Type {
                     xen,
@@ -1503,6 +1516,8 @@ struct Domain : private Node {
             }
             [[nodiscard]] Optional<String> tty() const noexcept { return String{node->first_attribute("tty")}; }
             [[nodiscard]] NamedSpan<Source> sources() const noexcept { return NamedSpan<Source>{"source", node}; }
+            [[nodiscard]] Optional<Protocol> protocol() const noexcept { return Protocol{node->first_node("protocol")}; }
+            [[nodiscard]] Optional<Log> log() const noexcept { return Log{node->first_node("log")}; }
             [[nodiscard]] Optional<Target> target() const noexcept { return Target{node->first_node("target")}; }
             [[nodiscard]] Optional<Alias> alias() const noexcept { return Alias{node->first_node("alias")}; }
             [[nodiscard]] Optional<Address> address() const noexcept { return Address{node->first_node("address")}; }
