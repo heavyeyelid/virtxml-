@@ -1522,12 +1522,7 @@ struct Domain : private Node {
             [[nodiscard]] Optional<Alias> alias() const noexcept { return Alias{node->first_node("alias")}; }
             [[nodiscard]] Optional<Address> address() const noexcept { return Address{node->first_node("address")}; }
         };
-        struct Console : public QemuCharDev {
-            [[nodiscard]] std::optional<QemuCharDevType> type() const noexcept {
-                const auto attr = node->first_attribute("type");
-                return attr ? magic_enum::enum_cast<QemuCharDevType>(attr->value()) : std::nullopt;
-            }
-        };
+        struct Console : public QemuCharDev {};
         struct Parallel : public QemuCharDev {};
         struct Serial : public QemuCharDev {};
         struct Channel : public Node {
@@ -1556,14 +1551,44 @@ struct Domain : private Node {
             [[nodiscard]] Optional<Alias> alias() const noexcept { return Alias{node->first_node("alias")}; }
             [[nodiscard]] Optional<Address> address() const noexcept { return Address{node->first_node("address")}; }
         };
+        struct Smartcard : public QemuCharDev {
+            enum class Mode {
+                host,
+                host_certificates,
+                passthrough,
+            };
+
+            [[nodiscard]] Mode mode() const noexcept {
+                std::string in{node->first_attribute("mode")->value()};
+                std::replace(in.begin(), in.end(), '-', '_');
+                return *magic_enum::enum_cast<Mode>(in);
+            }
+            [[nodiscard]] NamedSpan<StringNode> certificates() const noexcept { return NamedSpan<StringNode>{"certificate", node}; }
+            [[nodiscard]] Optional<StringNode> database() const noexcept { return StringNode{node->first_node("database")}; }
+        };
+        struct Hub : public Node {
+            enum class Type {
+                usb,
+            };
+
+            [[nodiscard]] Type type() const noexcept { return enum_wrap_attr<Type>(node, "type"); }
+            [[nodiscard]] Optional<Alias> alias() const noexcept { return Alias{node->first_node("alias")}; }
+            [[nodiscard]] Optional<Address> address() const noexcept { return Address{node->first_node("address")}; }
+        };
+        struct RedirDev : public QemuCharDev {
+            enum class Bus {
+                usb,
+            };
+
+            [[nodiscard]] Bus bus() const noexcept { return enum_wrap_attr<Bus>(node, "bus"); }
+            [[nodiscard]] Optional<Boot> boot() const noexcept { return Boot{node->first_node("boot")}; }
+        };
+
         /*
   <element name="devices">
     <interleave>
     <zeroOrMore>
       <choice>
-        <ref name="smartcard"/>
-        <ref name="hub"/>
-        <ref name="redirdev"/>
         <ref name="redirfilter"/>
         <ref name="rng"/>
         <ref name="tpm"/>
@@ -1605,6 +1630,9 @@ struct Domain : private Node {
         [[nodiscard]] NamedSpan<Parallel> parallels() const noexcept { return NamedSpan<Parallel>{"parallel", node}; }
         [[nodiscard]] NamedSpan<Serial> serials() const noexcept { return NamedSpan<Serial>{"serial", node}; }
         [[nodiscard]] NamedSpan<Channel> channels() const noexcept { return NamedSpan<Channel>{"channel", node}; }
+        [[nodiscard]] NamedSpan<Smartcard> smartcards() const noexcept { return NamedSpan<Smartcard>{"smartcard", node}; }
+        [[nodiscard]] NamedSpan<Hub> hubs() const noexcept { return NamedSpan<Hub>{"hub", node}; }
+        [[nodiscard]] NamedSpan<RedirDev> redir_devs() const noexcept { return NamedSpan<RedirDev>{"redirdev", node}; }
     };
     /*
      *<interleave>
