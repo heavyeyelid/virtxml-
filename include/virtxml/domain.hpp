@@ -1583,14 +1583,60 @@ struct Domain : private Node {
             [[nodiscard]] Bus bus() const noexcept { return enum_wrap_attr<Bus>(node, "bus"); }
             [[nodiscard]] Optional<Boot> boot() const noexcept { return Boot{node->first_node("boot")}; }
         };
+        struct RedirFilter : public Node {
+            struct UsbDev : public Node {
+                [[nodiscard]] bool allow() const noexcept { return bool_wrap_attr<YesNo>(node, "allow"); }
+                [[nodiscard]] Optional<Integral> class_() const noexcept { return Integral{node->first_attribute("class")}; }
+                [[nodiscard]] Optional<Integral> vendor() const noexcept { return Integral{node->first_attribute("vendor")}; }
+                [[nodiscard]] Optional<Integral> version() const noexcept { return Integral{node->first_attribute("version")}; }
+            };
 
+            [[nodiscard]] NamedSpan<UsbDev> usb_devs() const noexcept { return NamedSpan<UsbDev>{"usbdev", node}; }
+        };
+
+        struct Rng : public Node {
+            enum class Model {
+                virtio,
+            };
+
+            struct Backend : public QemuCharDev {
+                enum class Model {
+                    random,
+                    egd,
+                };
+                [[nodiscard]] Model model() const noexcept { return enum_wrap_attr<Model>(node, "model"); }
+                operator String() const noexcept { return String{node}; }
+                auto target() const noexcept = delete;
+                auto alias() const noexcept = delete;
+                auto address() const noexcept = delete;
+            };
+            struct Driver : public Node {
+                [[nodiscard]] std::optional<bool> iommu() const noexcept {
+                    const auto iommu_attr = node->first_attribute("iommu");
+                    return iommu_attr ? std::optional{static_cast<bool>(*magic_enum::enum_cast<OnOff>(iommu_attr->value()))} : std::nullopt;
+                }
+                [[nodiscard]] std::optional<bool> ats() const noexcept {
+                    const auto ats_attr = node->first_attribute("ats");
+                    return ats_attr ? std::optional{static_cast<bool>(*magic_enum::enum_cast<OnOff>(ats_attr->value()))} : std::nullopt;
+                }
+            };
+            struct Rate : public Node {
+                [[nodiscard]] Integral bytes() const noexcept { return Integral{node->first_attribute("bytes")}; }
+                [[nodiscard]] Optional<Integral> period() const noexcept { return Integral{node->first_attribute("period")}; }
+            };
+
+            [[nodiscard]] Model model() const noexcept { return enum_wrap_attr<Model>(node, "model"); }
+            [[nodiscard]] Backend backend() const noexcept { return Backend{node->first_node("backend")}; }
+            [[nodiscard]] Optional<Driver> driver() const noexcept { return Driver{node->first_node("driver")}; }
+            [[nodiscard]] Optional<Rate> rate() const noexcept { return Rate{node->first_node("rate")}; }
+            [[nodiscard]] Optional<Alias> alias() const noexcept { return Alias{node->first_node("alias")}; }
+            [[nodiscard]] Optional<Address> address() const noexcept { return Address{node->first_node("address")}; }
+        };
         /*
   <element name="devices">
     <interleave>
     <zeroOrMore>
       <choice>
-        <ref name="redirfilter"/>
-        <ref name="rng"/>
         <ref name="tpm"/>
         <ref name="shmem"/>
         <ref name="memorydev"/>
@@ -1633,6 +1679,8 @@ struct Domain : private Node {
         [[nodiscard]] NamedSpan<Smartcard> smartcards() const noexcept { return NamedSpan<Smartcard>{"smartcard", node}; }
         [[nodiscard]] NamedSpan<Hub> hubs() const noexcept { return NamedSpan<Hub>{"hub", node}; }
         [[nodiscard]] NamedSpan<RedirDev> redir_devs() const noexcept { return NamedSpan<RedirDev>{"redirdev", node}; }
+        [[nodiscard]] NamedSpan<RedirFilter> redir_filters() const noexcept { return NamedSpan<RedirFilter>{"redirfilter", node}; }
+        [[nodiscard]] NamedSpan<Rng> rngs() const noexcept { return NamedSpan<Rng>{"rng", node}; }
     };
     /*
      *<interleave>
