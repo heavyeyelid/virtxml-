@@ -99,12 +99,25 @@ struct Uuid : public String {
 
 template <class T> using void_once = std::void_t<T>;
 
-template <class E, template <class> class O = void_once> auto enum_wrap_attr(const xml_node<char>* node, gsl::czstring<> name) {
+template <class E, template <class> class O = void_once>
+auto enum_wrap_attr(const xml_node<char>* node, gsl::czstring<> name, bool underscores = false) {
     static_assert(std::is_enum_v<E>, "E must be an enum");
     if constexpr (std::is_void_v<O<E>>) {
+        if (underscores) {
+            std::string in{node->first_attribute(name)->value()};
+            std::replace(in.begin(), in.end(), '-', '_');
+            return *magic_enum::enum_cast<E>(in);
+        }
         return *magic_enum::enum_cast<E>(node->first_attribute(name)->value());
     } else if constexpr (std::is_same_v<Optional<E>, O<E>>) {
         const auto attr = node->first_attribute(name);
+        if (underscores) {
+            if (!attr)
+                return std::nullopt;
+            std::string in{attr->value()};
+            std::replace(in.begin(), in.end(), '-', '_');
+            return magic_enum::enum_cast<E>(in);
+        }
         return attr ? magic_enum::enum_cast<E>(attr->value()) : std::nullopt;
     } else {
         static_assert(!std::is_void_v<E>, "O shall be default or Optional"); // always fail

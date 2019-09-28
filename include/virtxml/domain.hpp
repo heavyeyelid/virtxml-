@@ -1593,7 +1593,6 @@ struct Domain : private Node {
 
             [[nodiscard]] NamedSpan<UsbDev> usb_devs() const noexcept { return NamedSpan<UsbDev>{"usbdev", node}; }
         };
-
         struct Rng : public Node {
             enum class Model {
                 virtio,
@@ -1632,12 +1631,28 @@ struct Domain : private Node {
             [[nodiscard]] Optional<Alias> alias() const noexcept { return Alias{node->first_node("alias")}; }
             [[nodiscard]] Optional<Address> address() const noexcept { return Address{node->first_node("address")}; }
         };
+        struct Tpm : public Node {
+            enum class Model { tpm_tis };
+
+            struct Backend : public Node {
+                enum class Type {
+                    passthrough,
+                };
+
+                [[nodiscard]] Type type() const noexcept { return enum_wrap_attr<Type>(node, "model"); }
+                [[nodiscard]] Optional<String> path() const noexcept { return String{node->first_attribute("path")}; }
+            };
+
+            [[nodiscard]] std::optional<Model> model() const noexcept { return enum_wrap_attr<Model, Optional>(node, "model", true); }
+            [[nodiscard]] Backend backend() const noexcept { return Backend{node->first_node("backend")}; }
+            [[nodiscard]] Optional<Alias> alias() const noexcept { return Alias{node->first_node("alias")}; }
+        };
+
         /*
   <element name="devices">
     <interleave>
     <zeroOrMore>
       <choice>
-        <ref name="tpm"/>
         <ref name="shmem"/>
         <ref name="memorydev"/>
       </choice>
@@ -1681,6 +1696,7 @@ struct Domain : private Node {
         [[nodiscard]] NamedSpan<RedirDev> redir_devs() const noexcept { return NamedSpan<RedirDev>{"redirdev", node}; }
         [[nodiscard]] NamedSpan<RedirFilter> redir_filters() const noexcept { return NamedSpan<RedirFilter>{"redirfilter", node}; }
         [[nodiscard]] NamedSpan<Rng> rngs() const noexcept { return NamedSpan<Rng>{"rng", node}; }
+        [[nodiscard]] NamedSpan<Tpm> tpms() const noexcept { return NamedSpan<Tpm>{"tpm", node}; }
     };
     /*
      *<interleave>
