@@ -1647,13 +1647,37 @@ struct Domain : private Node {
             [[nodiscard]] Backend backend() const noexcept { return Backend{node->first_node("backend")}; }
             [[nodiscard]] Optional<Alias> alias() const noexcept { return Alias{node->first_node("alias")}; }
         };
+        struct ShMem : public Node {
+            struct Model : public Node {
+                enum class Type {
+                    ivshmem,
+                    ivshmem_plain,
+                    ivshmem_doorbell,
+                };
 
+                [[nodiscard]] Type type() const noexcept { return enum_wrap_attr<Type>(node, "type", true); }
+            };
+            struct Server : public Node {
+                [[nodiscard]] Optional<String> path() const noexcept { return String{node->first_attribute("path")}; }
+            };
+            struct Msi : public Node {
+                [[nodiscard]] std::optional<bool> ioeventfd() const noexcept { return bool_wrap_attr<OnOff, Optional>(node, "ioeventfd"); }
+                [[nodiscard]] Optional<Integral> vectors() const noexcept { return Integral{node->first_attribute("vectors")}; }
+            };
+
+            [[nodiscard]] String name() const noexcept { return String{node->first_attribute("name")}; }
+            [[nodiscard]] Optional<Model> model() const noexcept { return Model{node->first_node("model")}; }
+            [[nodiscard]] Optional<Integral> size() const noexcept { return Integral{node->first_node("size")}; }
+            [[nodiscard]] Optional<Server> server() const noexcept { return Server{node->first_node("server")}; }
+            [[nodiscard]] Optional<Msi> msi() const noexcept { return Msi{node->first_node("msi")}; }
+            [[nodiscard]] Optional<Alias> alias() const noexcept { return Alias{node->first_node("alias")}; }
+            [[nodiscard]] Optional<Address> address() const noexcept { return Address{node->first_node("address")}; }
+        };
         /*
   <element name="devices">
     <interleave>
     <zeroOrMore>
       <choice>
-        <ref name="shmem"/>
         <ref name="memorydev"/>
       </choice>
     </zeroOrMore>
@@ -1697,6 +1721,7 @@ struct Domain : private Node {
         [[nodiscard]] NamedSpan<RedirFilter> redir_filters() const noexcept { return NamedSpan<RedirFilter>{"redirfilter", node}; }
         [[nodiscard]] NamedSpan<Rng> rngs() const noexcept { return NamedSpan<Rng>{"rng", node}; }
         [[nodiscard]] NamedSpan<Tpm> tpms() const noexcept { return NamedSpan<Tpm>{"tpm", node}; }
+        [[nodiscard]] NamedSpan<ShMem> sh_mems() const noexcept { return NamedSpan<ShMem>{"shmem", node}; }
     };
     /*
      *<interleave>
