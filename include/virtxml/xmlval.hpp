@@ -113,7 +113,7 @@ auto enum_wrap_attr(const xml_node<char>* node, gsl::czstring<> name, bool under
         const auto attr = node->first_attribute(name);
         if (underscores) {
             if (!attr)
-                return std::nullopt;
+                return std::optional<E>{std::nullopt};
             std::string in{attr->value()};
             std::replace(in.begin(), in.end(), '-', '_');
             return magic_enum::enum_cast<E>(in);

@@ -1857,8 +1857,8 @@ struct Domain : private Node {
     [[nodiscard]] std::optional<OffOption> on_reboot() const noexcept { return enum_wrap_attr<OffOption, Optional>(node, "on_reboot", true); }
     [[nodiscard]] std::optional<OffOption> on_poweroff() const noexcept { return enum_wrap_attr<OffOption, Optional>(node, "on_poweroff", true); }
     [[nodiscard]] std::optional<CrashOption> on_crash() const noexcept { return enum_wrap_attr<CrashOption, Optional>(node, "on_crash", true); }
-    [[nodiscard]] std::optional<LockFailureOption> track() const noexcept {
-        return enum_wrap_attr<LockFailureOption, Optional>(node, "on_lockfailure", );
+    [[nodiscard]] std::optional<LockFailureOption> on_lockfailure() const noexcept {
+        return enum_wrap_attr<LockFailureOption, Optional>(node, "on_lockfailure");
     }
     // pm() // left out because low priority
     [[nodiscard]] Optional<Perf> perf() const noexcept { return Perf{node->first_node("perf")}; }
