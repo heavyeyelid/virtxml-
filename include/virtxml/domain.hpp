@@ -358,6 +358,14 @@ struct Domain : private Node {
 
         [[nodiscard]] NamedSpan<Timer> timers() const noexcept { return NamedSpan<Timer>{"timer", node}; }
     };
+    struct Pm : public Node {
+        struct SuspendTo : public Node {
+            [[nodiscard]] std::optional<bool> enabled() const noexcept { return bool_wrap_attr<YesNo, Optional>(node, "enabled"); }
+        };
+
+        [[nodiscard]] Optional<SuspendTo> suspend_to_mem() const noexcept { return SuspendTo{node->first_node("suspend-to-mem")}; }
+        [[nodiscard]] Optional<SuspendTo> suspend_to_disk() const noexcept { return SuspendTo{node->first_node("suspend-to-disk")}; }
+    };
     struct Perf : public Node {
         struct Event : public Node {
             enum class Name {
@@ -1850,19 +1858,20 @@ struct Domain : private Node {
     [[nodiscard]] Optional<Bootloader> bootloader() const noexcept { return Bootloader{node->first_node("bootloader")}; }
     [[nodiscard]] Optional<BootloaderArgs> bootloader_args() const noexcept { return BootloaderArgs{node->first_node("bootloader_args")}; }
     [[nodiscard]] Optional<Os> os() const noexcept { return Os{node->first_node("os")}; }
-    [[nodiscard]] Optional<Clock> clock() const noexcept { return Clock{node->first_node("clock")}; }
-    // resources() // left out because low priority since there is already an access in the Object API
-    // features() // left out because low priority since there is already an access in the Object API
-    [[nodiscard]] Optional<Devices> devices() const noexcept { return Devices{node->first_node("devices")}; }
+
     [[nodiscard]] std::optional<OffOption> on_reboot() const noexcept { return enum_wrap_attr<OffOption, Optional>(node, "on_reboot", true); }
     [[nodiscard]] std::optional<OffOption> on_poweroff() const noexcept { return enum_wrap_attr<OffOption, Optional>(node, "on_poweroff", true); }
     [[nodiscard]] std::optional<CrashOption> on_crash() const noexcept { return enum_wrap_attr<CrashOption, Optional>(node, "on_crash", true); }
     [[nodiscard]] std::optional<LockFailureOption> on_lockfailure() const noexcept {
         return enum_wrap_attr<LockFailureOption, Optional>(node, "on_lockfailure");
     }
-    // pm() // left out because low priority
+    [[nodiscard]] Optional<Clock> clock() const noexcept { return Clock{node->first_node("clock")}; }
+    [[nodiscard]] Optional<Pm> pm() const noexcept { return Pm{node->first_node("pm")}; }
     [[nodiscard]] Optional<Perf> perf() const noexcept { return Perf{node->first_node("perf")}; }
     // idmap() // left out because low priority
+    // resources() // left out because low priority since there is already an access in the Object API
+    // features() // left out because low priority since there is already an access in the Object API
+    [[nodiscard]] Optional<Devices> devices() const noexcept { return Devices{node->first_node("devices")}; }
     ///
 }; // namespace
 
