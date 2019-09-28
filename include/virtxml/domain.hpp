@@ -393,7 +393,6 @@ struct Domain : private Node {
 
         [[nodiscard]] NamedSpan<Event> events() const noexcept { return NamedSpan<Event>{"event", node}; }
     };
-
     struct Devices : public Node {
         enum class QemuCharDevType {
             dev,
@@ -1705,28 +1704,79 @@ struct Domain : private Node {
             [[nodiscard]] Optional<Alias> alias() const noexcept { return Alias{node->first_node("alias")}; }
             [[nodiscard]] Optional<Address> address() const noexcept { return Address{node->first_node("address")}; }
         };
+        struct Watchdog : public Node {
+            enum class Model {
+                i6300esb,
+                ib700,
+                diag288,
+            };
+            enum class Action {
+                reset,
+                shutdown,
+                poweroff,
+                pause,
+                none,
+                dump,
+                inject_nmi,
+            };
 
-        /*
-  <element name="devices">
-    <interleave>
-        <optional>
-          <ref name="watchdog"/>
-        </optional>
-        <optional>
-          <ref name="memballoon"/>
-        </optional>
-        <optional>
-          <ref name="nvram"/>
-        </optional>
-        <zeroOrMore>
-          <ref name="panic"/>
-        </zeroOrMore>
-        <optional>
-          <ref name="iommu"/>
-        </optional>
-    </interleave>
-  </element>
- * */
+            [[nodiscard]] Model model() const noexcept { return enum_wrap_attr<Model>(node, "model"); }
+            [[nodiscard]] std::optional<Action> action() const noexcept { return enum_wrap_attr<Action, Optional>(node, "action", true); }
+            [[nodiscard]] Optional<Alias> alias() const noexcept { return Alias{node->first_node("alias")}; }
+            [[nodiscard]] Optional<Address> address() const noexcept { return Address{node->first_node("address")}; }
+        };
+        struct MemBalloon : public Node {
+            enum class Model {
+                virtio,
+                xen,
+                none,
+            };
+
+            struct Stats : public Node {
+                [[nodiscard]] Integral period() const noexcept { return Integral{node->first_attribute("period")}; }
+            };
+            struct Driver : public Node {
+                [[nodiscard]] std::optional<bool> iommu() const noexcept { return bool_wrap_attr<OnOff, Optional>(node, "iommu"); }
+                [[nodiscard]] std::optional<bool> ats() const noexcept { return bool_wrap_attr<OnOff, Optional>(node, "ats"); }
+            };
+
+            [[nodiscard]] Model model() const noexcept { return enum_wrap_attr<Model>(node, "model"); }
+            [[nodiscard]] std::optional<bool> autodeflate() const noexcept { return bool_wrap_attr<OnOff, Optional>(node, "autodeflate"); }
+            [[nodiscard]] Optional<Alias> alias() const noexcept { return Alias{node->first_node("alias")}; }
+            [[nodiscard]] Optional<Address> address() const noexcept { return Address{node->first_node("address")}; }
+            [[nodiscard]] Optional<Stats> stats() const noexcept { return Stats{node->first_node("stats")}; }
+            [[nodiscard]] Optional<Driver> driver() const noexcept { return Driver{node->first_node("driver")}; }
+        };
+        struct NvRam : public Node {
+            [[nodiscard]] Optional<Address> address() const noexcept { return Address{node->first_node("address")}; }
+        };
+        struct Panic : public Node {
+            enum class Model {
+                isa,
+                pseries,
+                hyperv,
+                s390,
+            };
+
+            [[nodiscard]] Model model() const noexcept { return enum_wrap_attr<Model>(node, "model"); }
+            [[nodiscard]] Optional<Alias> alias() const noexcept { return Alias{node->first_node("alias")}; }
+            [[nodiscard]] Optional<Address> address() const noexcept { return Address{node->first_node("address")}; }
+        };
+        struct Iommu : public Node {
+            enum class Model {
+                intel,
+            };
+
+            struct Driver : public Node {
+                [[nodiscard]] std::optional<bool> intremap() const noexcept { return bool_wrap_attr<OnOff, Optional>(node, "intremap"); }
+                [[nodiscard]] std::optional<bool> caching_mode() const noexcept { return bool_wrap_attr<OnOff, Optional>(node, "caching_mode"); }
+                [[nodiscard]] std::optional<bool> eim() const noexcept { return bool_wrap_attr<OnOff, Optional>(node, "eim"); }
+                [[nodiscard]] std::optional<bool> iotlb() const noexcept { return bool_wrap_attr<OnOff, Optional>(node, "iotlb"); }
+            };
+
+            [[nodiscard]] Model model() const noexcept { return enum_wrap_attr<Model>(node, "model"); }
+            [[nodiscard]] Optional<Driver> driver() const noexcept { return Driver{node->first_node("driver")}; }
+        };
 
         [[nodiscard]] Optional<Emulator> emulator() const noexcept { return Emulator{node->first_node("emulator")}; }
         [[nodiscard]] NamedSpan<Disk> disks() const noexcept { return NamedSpan<Disk>{"disk", node}; }
@@ -1751,6 +1801,11 @@ struct Domain : private Node {
         [[nodiscard]] NamedSpan<Tpm> tpms() const noexcept { return NamedSpan<Tpm>{"tpm", node}; }
         [[nodiscard]] NamedSpan<ShMem> sh_mems() const noexcept { return NamedSpan<ShMem>{"shmem", node}; }
         [[nodiscard]] NamedSpan<MemoryDev> memory_devs() const noexcept { return NamedSpan<MemoryDev>{"memorydev", node}; }
+        [[nodiscard]] Optional<Watchdog> watchdog() const noexcept { return Watchdog{node->first_node("watchdog")}; }
+        [[nodiscard]] Optional<MemBalloon> memballoon() const noexcept { return MemBalloon{node->first_node("memballoon")}; }
+        [[nodiscard]] Optional<NvRam> nvram() const noexcept { return NvRam{node->first_node("nvram")}; }
+        [[nodiscard]] NamedSpan<Panic> panics() const noexcept { return NamedSpan<Panic>{"panic", node}; }
+        [[nodiscard]] Optional<Iommu> iommu() const noexcept { return Iommu{node->first_node("iommu")}; }
     };
     /*
      *<interleave>
@@ -1798,33 +1853,12 @@ struct Domain : private Node {
     [[nodiscard]] Optional<Clock> clock() const noexcept { return Clock{node->first_node("clock")}; }
     // resources() // left out because low priority since there is already an access in the Object API
     // features() // left out because low priority since there is already an access in the Object API
-    [[nodiscard]] std::optional<OffOption> on_reboot() const noexcept {
-        const auto track_attr = node->first_attribute("on_reboot");
-        if (!track_attr)
-            return std::nullopt;
-        std::string in{track_attr->value()};
-        std::replace(in.begin(), in.end(), '-', '_');
-        return magic_enum::enum_cast<OffOption>(in);
-    }
-    [[nodiscard]] std::optional<OffOption> on_poweroff() const noexcept {
-        const auto track_attr = node->first_attribute("on_poweroff");
-        if (!track_attr)
-            return std::nullopt;
-        std::string in{track_attr->value()};
-        std::replace(in.begin(), in.end(), '-', '_');
-        return magic_enum::enum_cast<OffOption>(in);
-    }
-    [[nodiscard]] std::optional<CrashOption> on_crash() const noexcept {
-        const auto track_attr = node->first_attribute("on_crash");
-        if (!track_attr)
-            return std::nullopt;
-        std::string in{track_attr->value()};
-        std::replace(in.begin(), in.end(), '-', '_');
-        return magic_enum::enum_cast<CrashOption>(in);
-    }
+    [[nodiscard]] Optional<Devices> devices() const noexcept { return Devices{node->first_node("devices")}; }
+    [[nodiscard]] std::optional<OffOption> on_reboot() const noexcept { return enum_wrap_attr<OffOption, Optional>(node, "on_reboot", true); }
+    [[nodiscard]] std::optional<OffOption> on_poweroff() const noexcept { return enum_wrap_attr<OffOption, Optional>(node, "on_poweroff", true); }
+    [[nodiscard]] std::optional<CrashOption> on_crash() const noexcept { return enum_wrap_attr<CrashOption, Optional>(node, "on_crash", true); }
     [[nodiscard]] std::optional<LockFailureOption> track() const noexcept {
-        const auto track_attr = node->first_attribute("on_lockfailure");
-        return track_attr ? magic_enum::enum_cast<LockFailureOption>(track_attr->value()) : std::nullopt;
+        return enum_wrap_attr<LockFailureOption, Optional>(node, "on_lockfailure", );
     }
     // pm() // left out because low priority
     [[nodiscard]] Optional<Perf> perf() const noexcept { return Perf{node->first_node("perf")}; }
