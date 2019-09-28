@@ -1673,29 +1673,57 @@ struct Domain : private Node {
             [[nodiscard]] Optional<Alias> alias() const noexcept { return Alias{node->first_node("alias")}; }
             [[nodiscard]] Optional<Address> address() const noexcept { return Address{node->first_node("address")}; }
         };
+        struct MemoryDev : public Node {
+            enum class Model {
+                dimm,
+                nvdimm,
+            };
+            enum class Access {
+                shared,
+                private_,
+            };
+
+            struct Source : public Node {
+                [[nodiscard]] Optional<Integral> page_size() const noexcept { return Integral{node->first_attribute("pagesize")}; }
+                [[nodiscard]] Optional<String> cpuset() const noexcept { return String{node->first_attribute("cpuset")}; }
+                [[nodiscard]] Optional<String> path() const noexcept { return String{node->first_attribute("path")}; }
+            };
+            struct Target : public Node {
+                struct Label : public Node {
+                    [[nodiscard]] Integral size() const noexcept { return Integral{node->first_node("size")}; }
+                };
+
+                [[nodiscard]] Integral size() const noexcept { return Integral{node->first_node("size")}; }
+                [[nodiscard]] Optional<Integral> node() const noexcept { return Integral{node->first_node("node")}; }
+                [[nodiscard]] Optional<Label> label() const noexcept { return Label{node->first_node("label")}; }
+            };
+
+            [[nodiscard]] Model model() const noexcept { return enum_wrap_attr<Model>(node, "model"); }
+            [[nodiscard]] std::optional<Access> access() const noexcept { return enum_wrap_attr<Access, Optional>(node, "access"); }
+            [[nodiscard]] Optional<Source> source() const noexcept { return Source{node->first_node("source")}; }
+            [[nodiscard]] Target target() const noexcept { return Target{node->first_node("target")}; }
+            [[nodiscard]] Optional<Alias> alias() const noexcept { return Alias{node->first_node("alias")}; }
+            [[nodiscard]] Optional<Address> address() const noexcept { return Address{node->first_node("address")}; }
+        };
+
         /*
   <element name="devices">
     <interleave>
-    <zeroOrMore>
-      <choice>
-        <ref name="memorydev"/>
-      </choice>
-    </zeroOrMore>
-    <optional>
-      <ref name="watchdog"/>
-    </optional>
-    <optional>
-      <ref name="memballoon"/>
-    </optional>
-    <optional>
-      <ref name="nvram"/>
-    </optional>
-    <zeroOrMore>
-      <ref name="panic"/>
-    </zeroOrMore>
-    <optional>
-      <ref name="iommu"/>
-    </optional>
+        <optional>
+          <ref name="watchdog"/>
+        </optional>
+        <optional>
+          <ref name="memballoon"/>
+        </optional>
+        <optional>
+          <ref name="nvram"/>
+        </optional>
+        <zeroOrMore>
+          <ref name="panic"/>
+        </zeroOrMore>
+        <optional>
+          <ref name="iommu"/>
+        </optional>
     </interleave>
   </element>
  * */
@@ -1722,6 +1750,7 @@ struct Domain : private Node {
         [[nodiscard]] NamedSpan<Rng> rngs() const noexcept { return NamedSpan<Rng>{"rng", node}; }
         [[nodiscard]] NamedSpan<Tpm> tpms() const noexcept { return NamedSpan<Tpm>{"tpm", node}; }
         [[nodiscard]] NamedSpan<ShMem> sh_mems() const noexcept { return NamedSpan<ShMem>{"shmem", node}; }
+        [[nodiscard]] NamedSpan<MemoryDev> memory_devs() const noexcept { return NamedSpan<MemoryDev>{"memorydev", node}; }
     };
     /*
      *<interleave>
