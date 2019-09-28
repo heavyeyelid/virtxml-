@@ -401,6 +401,16 @@ struct Domain : private Node {
 
         [[nodiscard]] NamedSpan<Event> events() const noexcept { return NamedSpan<Event>{"event", node}; }
     };
+    struct IdMap : public Node {
+        struct Id : public Node {
+            [[nodiscard]] Integral start() const noexcept { return Integral{node->first_attribute("start")}; }
+            [[nodiscard]] Integral target() const noexcept { return Integral{node->first_attribute("target")}; }
+            [[nodiscard]] Integral count() const noexcept { return Integral{node->first_attribute("count")}; }
+        };
+
+        [[nodiscard]] NamedSpan<Id> uids() const noexcept { return NamedSpan<Id>{"uid", node}; }
+        [[nodiscard]] NamedSpan<Id> gids() const noexcept { return NamedSpan<Id>{"gid", node}; }
+    };
     struct Devices : public Node {
         enum class QemuCharDevType {
             dev,
@@ -1821,14 +1831,9 @@ struct Domain : private Node {
         //<ref name="features"/>
 
         <optional>
-          //<ref name="pm"/>
-        </optional>
-        <optional>
           //<ref name="idmap"/>
         </optional>
-        <optional>
-          <ref name="devices"/>
-        </optional>
+
         <zeroOrMore>
           <ref name="seclabel"/>
         </zeroOrMore>
@@ -1858,7 +1863,6 @@ struct Domain : private Node {
     [[nodiscard]] Optional<Bootloader> bootloader() const noexcept { return Bootloader{node->first_node("bootloader")}; }
     [[nodiscard]] Optional<BootloaderArgs> bootloader_args() const noexcept { return BootloaderArgs{node->first_node("bootloader_args")}; }
     [[nodiscard]] Optional<Os> os() const noexcept { return Os{node->first_node("os")}; }
-
     [[nodiscard]] std::optional<OffOption> on_reboot() const noexcept { return enum_wrap_attr<OffOption, Optional>(node, "on_reboot", true); }
     [[nodiscard]] std::optional<OffOption> on_poweroff() const noexcept { return enum_wrap_attr<OffOption, Optional>(node, "on_poweroff", true); }
     [[nodiscard]] std::optional<CrashOption> on_crash() const noexcept { return enum_wrap_attr<CrashOption, Optional>(node, "on_crash", true); }
@@ -1868,7 +1872,7 @@ struct Domain : private Node {
     [[nodiscard]] Optional<Clock> clock() const noexcept { return Clock{node->first_node("clock")}; }
     [[nodiscard]] Optional<Pm> pm() const noexcept { return Pm{node->first_node("pm")}; }
     [[nodiscard]] Optional<Perf> perf() const noexcept { return Perf{node->first_node("perf")}; }
-    // idmap() // left out because low priority
+    [[nodiscard]] Optional<IdMap> idmap() const noexcept { return IdMap{node->first_node("idmap")}; }
     // resources() // left out because low priority since there is already an access in the Object API
     // features() // left out because low priority since there is already an access in the Object API
     [[nodiscard]] Optional<Devices> devices() const noexcept { return Devices{node->first_node("devices")}; }
