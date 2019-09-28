@@ -1693,9 +1693,9 @@ struct Domain : private Node {
                     [[nodiscard]] Integral size() const noexcept { return Integral{node->first_node("size")}; }
                 };
 
-                [[nodiscard]] Integral size() const noexcept { return Integral{node->first_node("size")}; }
-                [[nodiscard]] Optional<Integral> node() const noexcept { return Integral{node->first_node("node")}; }
-                [[nodiscard]] Optional<Label> label() const noexcept { return Label{node->first_node("label")}; }
+                [[nodiscard]] Integral size() const noexcept { return Integral{Node::node->first_node("size")}; }
+                [[nodiscard]] Optional<Integral> node() const noexcept { return Integral{Node::node->first_node("node")}; }
+                [[nodiscard]] Optional<Label> label() const noexcept { return Label{Node::node->first_node("label")}; }
             };
 
             [[nodiscard]] Model model() const noexcept { return enum_wrap_attr<Model>(node, "model"); }
