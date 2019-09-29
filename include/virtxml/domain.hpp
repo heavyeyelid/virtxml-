@@ -1825,32 +1825,34 @@ struct Domain : private Node {
         [[nodiscard]] NamedSpan<Panic> panics() const noexcept { return NamedSpan<Panic>{"panic", node}; }
         [[nodiscard]] Optional<Iommu> iommu() const noexcept { return Iommu{node->first_node("iommu")}; }
     };
-    /*
-     *<interleave>
-        //<ref name="resources"/>
-        //<ref name="features"/>
+    struct SecLabel : public Node {
+        enum class Type {
+            dynamic,
+            static_,
+            none,
+        };
 
-        <optional>
-          //<ref name="idmap"/>
-        </optional>
+        [[nodiscard]] Optional<String> model() const noexcept { return String{node->first_attribute("model")}; }
+        [[nodiscard]] std::optional<Type> type() const noexcept { return enum_wrap_attr<Type, Optional>(node, "type"); }
+        [[nodiscard]] std::optional<bool> relabel() const noexcept { return bool_wrap_attr<YesNo, Optional>(node, "relabel"); }
+        [[nodiscard]] Optional<String> label() const noexcept { return String{node->first_node("label")}; }
+        [[nodiscard]] Optional<String> image_label() const noexcept { return String{node->first_node("imagelabel")}; }
+        [[nodiscard]] Optional<String> base_label() const noexcept { return String{node->first_node("baselabel")}; }
+    };
+    struct Keywrap : public Node {
+        struct Cipher : public Node {
+            enum class Name {
+                aes,
+                dsa,
+            };
 
-        <zeroOrMore>
-          <ref name="seclabel"/>
-        </zeroOrMore>
-        <optional>
-          <ref name='qemucmdline'/>
-        </optional>
-        <optional>
-          <ref name='lxcsharens'/>
-        </optional>
-        <optional>
-          <ref name='keywrap'/>
-        </optional>
-      </interleave>
-     * */
-    ///
+            [[nodiscard]] Name name() const noexcept { return enum_wrap_attr<Name>(node, "name"); }
+            [[nodiscard]] bool state() const noexcept { return bool_wrap_attr<OnOff>(node, "state"); }
+        };
 
-    ///
+        [[nodiscard]] NamedSpan<Cipher> ciphers() const noexcept { return NamedSpan<Cipher>{"cipher", node}; }
+    };
+
     [[nodiscard]] Type type() const noexcept { return *magic_enum::enum_cast<Type>(std::string_view{node->first_attribute("type")->value()}); }
     [[nodiscard]] Optional<Integral> id() const noexcept { return Integral{node->first_attribute("id")}; }
     [[nodiscard]] String name() const noexcept { return String{node->first_node("name")}; }
@@ -1876,6 +1878,10 @@ struct Domain : private Node {
     // resources() // left out because low priority since there is already an access in the Object API
     // features() // left out because low priority since there is already an access in the Object API
     [[nodiscard]] Optional<Devices> devices() const noexcept { return Devices{node->first_node("devices")}; }
+    [[nodiscard]] NamedSpan<SecLabel> seclabels() const noexcept { return NamedSpan<SecLabel>{"seclabel", node}; }
+    // qemucmdline() // left out because hard to interface, and driver specific anyway
+    // lxcsharens() // left out because hard to interface, and driver specific anyway
+    [[nodiscard]] Optional<Keywrap> keywrap() const noexcept { return Keywrap{node->first_node("keywrap")}; }
     ///
 }; // namespace
 
