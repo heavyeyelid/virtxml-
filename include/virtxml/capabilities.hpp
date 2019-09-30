@@ -18,7 +18,7 @@ struct DriverCapabilities {
             struct Model : public Node {
 #if 1 /* With functions */
                 constexpr explicit operator String() const noexcept { return String{node}; }
-                [[nodiscard]] Optional<String> fallback_str() const noexcept { return String{node->first_attribute("fallback")}; }
+                [[nodiscard]] inline Optional<String> fallback_str() const noexcept { return String{node->first_attribute("fallback")}; }
 #else /* With paramexpr */
                 using operator String(this s) = String{s.node};
                 using fallback_str() = String{node->first_attribute("fallback")};
@@ -32,7 +32,7 @@ struct DriverCapabilities {
 
             struct Feature : public Node {
 #if 1 /* With functions */
-                [[nodiscard]] String name() const noexcept { return String{node->first_attribute("name")}; }
+                [[nodiscard]] inline String name() const noexcept { return String{node->first_attribute("name")}; }
 #else /* With paramexpr */
                 using name(this s) = String{s.node->first_attribute("name")};
 #endif
@@ -47,8 +47,10 @@ struct DriverCapabilities {
                 };
 
 #if 1 /* With functions */
-                [[nodiscard]] bool live() const noexcept { return node->first_node("live") != nullptr; }
-                [[nodiscard]] Optional<UriTransports> uri_transports() const noexcept { return UriTransports{node->first_node("uri_transports")}; }
+                [[nodiscard]] inline bool live() const noexcept { return node->first_node("live") != nullptr; }
+                [[nodiscard]] inline Optional<UriTransports> uri_transports() const noexcept {
+                    return UriTransports{node->first_node("uri_transports")};
+                }
 #else /* With paramexpr */
                 using live(this s) = s.node->first_node("live") != nullptr;
                 using uri_transports(this s) = UriTransports{s.node->first_node("uri_transports")};
@@ -59,7 +61,7 @@ struct DriverCapabilities {
                 struct Cell : public Node {
                     struct Cpu : public Node {
 #if 1 /* With functions */
-                        [[nodiscard]] Integral id() const noexcept { return Integral{node->first_attribute("id")}; }
+                        [[nodiscard]] inline Integral id() const noexcept { return Integral{node->first_attribute("id")}; }
 #else /* With paramexpr */
                         using id(this s) = Integral{node->first_attribute("id")};
 #endif
@@ -67,13 +69,13 @@ struct DriverCapabilities {
                     struct Cpus : public NamedSpan<Cpu> {
 #if 1 /* With functions */
                         Cpus() : NamedSpan("cpu", node) {}
-                        [[nodiscard]] Integral num() const noexcept { return Integral{node->first_attribute("num")}; }
+                        [[nodiscard]] inline Integral num() const noexcept { return Integral{node->first_attribute("num")}; }
 #else /* With paramexpr */
                         using num(this s) = Integral{node->first_attribute("num")};
 #endif
                     };
 #if 1 /* With functions */
-                    [[nodiscard]] Integral id() const noexcept { return Integral{node->first_attribute("id")}; }
+                    [[nodiscard]] inline Integral id() const noexcept { return Integral{node->first_attribute("id")}; }
 #else /* With paramexpr */
                     using id(this s) = Integral{node->first_attribute("id")};
 #endif
@@ -81,16 +83,16 @@ struct DriverCapabilities {
                 struct Cells : public NamedSpan<Cell> {
                     using NamedSpan::NamedSpan;
 #if 1 /* With functions */
-                    [[nodiscard]] Integral num() const noexcept { return Integral{node->first_attribute("num")}; }
+                    [[nodiscard]] inline Integral num() const noexcept { return Integral{node->first_attribute("num")}; }
 #else /* With paramexpr */
                     using num(this s) = Integral{node->first_attribute("num")};
 #endif
                 };
 #if 1 /* With functions */
-                [[nodiscard]] Optional<Integral> sockets() const noexcept { return Integral{node->first_attribute("sockets")}; }
-                [[nodiscard]] Optional<Integral> cores() const noexcept { return Integral{node->first_attribute("cores")}; }
-                [[nodiscard]] Optional<Integral> threads() const noexcept { return Integral{node->first_attribute("threads")}; }
-                [[nodiscard]] Cells cells() const noexcept { return Cells{"cell", node->first_node("cells")}; }
+                [[nodiscard]] inline Optional<Integral> sockets() const noexcept { return Integral{node->first_attribute("sockets")}; }
+                [[nodiscard]] inline Optional<Integral> cores() const noexcept { return Integral{node->first_attribute("cores")}; }
+                [[nodiscard]] inline Optional<Integral> threads() const noexcept { return Integral{node->first_attribute("threads")}; }
+                [[nodiscard]] inline Cells cells() const noexcept { return Cells{"cell", node->first_node("cells")}; }
 #else /* With paramexpr */
                 using sockets(this s) = Integral{node->first_attribute("sockets")};
                 using cores(this s) = Integral{node->first_attribute("cores")};
@@ -101,8 +103,8 @@ struct DriverCapabilities {
 
             struct SecModel : public Node {
 #if 1 /* With functions */
-                [[nodiscard]] String model() const noexcept { return String{node->first_node("model")}; }
-                [[nodiscard]] Integral doi() const noexcept { return Integral{node->first_node("doi")}; }
+                [[nodiscard]] inline String model() const noexcept { return String{node->first_node("model")}; }
+                [[nodiscard]] inline Integral doi() const noexcept { return Integral{node->first_node("doi")}; }
 #else /* With paramexpr */
                 using model(this s) = String{s.node->first_node("model")};
                 using doi(this s) = Integral{s.node->first_node("doi")};
@@ -110,15 +112,15 @@ struct DriverCapabilities {
             };
 
 #if 1 /* With functions */
-            [[nodiscard]] String arch() const noexcept { return String{node->first_node("arch")}; }
-            [[nodiscard]] Optional<String> vendor() const noexcept { return String{node->first_node("vendor")}; }
+            [[nodiscard]] inline String arch() const noexcept { return String{node->first_node("arch")}; }
+            [[nodiscard]] inline Optional<String> vendor() const noexcept { return String{node->first_node("vendor")}; }
             // Optional<String> model() const noexcept;
-            [[nodiscard]] FeatureList feature_list() const noexcept { return FeatureList{node}; }
-            [[nodiscard]] Optional<MigrationFeatures> migration_features() const noexcept {
+            [[nodiscard]] inline FeatureList feature_list() const noexcept { return FeatureList{node}; }
+            [[nodiscard]] inline Optional<MigrationFeatures> migration_features() const noexcept {
                 return MigrationFeatures{node->first_node("migration_features")};
             }
-            [[nodiscard]] Optional<SecModel> secmodel() const noexcept { return SecModel{node->first_node("secmodel")}; }
-            [[nodiscard]] Topology topology() const noexcept { return Topology{node->first_node("topology")}; }
+            [[nodiscard]] inline Optional<SecModel> secmodel() const noexcept { return SecModel{node->first_node("secmodel")}; }
+            [[nodiscard]] inline Topology topology() const noexcept { return Topology{node->first_node("topology")}; }
 #else /* With paramexpr */
             using arch(this s) = String{s.node->first_node("arch")};
             using arch(this s) = String{s.node->first_node("vendor")};
@@ -142,7 +144,7 @@ struct DriverCapabilities {
          */
 
 #if 1 /* With functions */
-        [[nodiscard]] String uuid() const noexcept { return String{node->first_node("uuid")}; }
+        [[nodiscard]] inline String uuid() const noexcept { return String{node->first_node("uuid")}; }
         // String uuid() noexcept { return {node->first_node("uuid")}; }
 #else /* With paramexpr */
         using uuid(this s) = String{s.node->first_node("uuid")};
@@ -165,12 +167,12 @@ struct DriverCapabilities {
 #if 1 /* With functions */
   private:
     // inline auto cap() { return doc.first_node("capabilities"); }
-    [[nodiscard]] inline auto cap() const { return doc.first_node("capabilities"); }
+    [[nodiscard]] inline inline auto cap() const { return doc.first_node("capabilities"); }
 
   public:
     // inline auto host() { return Host{cap()->first_node("host")}; }
-    [[nodiscard]] inline Host host() const { return {cap()->first_node("host")}; }
-    [[nodiscard]] inline GuestList guest_list() { return GuestList{cap()}; }
+    [[nodiscard]] inline inline Host host() const { return {cap()->first_node("host")}; }
+    [[nodiscard]] inline inline GuestList guest_list() { return GuestList{cap()}; }
 #else /* With paramexpr */
   private
     using cap(this s) = s.doc.first_node("capabilities");

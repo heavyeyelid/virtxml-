@@ -24,7 +24,7 @@ struct Node {
 };
 
 template <class FCRTP, class CRTP> struct HasMore {
-    [[nodiscard]] const xml_node<>* get_node() const noexcept {
+    [[nodiscard]] inline const xml_node<>* get_node() const noexcept {
         return static_cast<const Node&>(static_cast<const FCRTP&>(static_cast<const CRTP&>(*this))).node;
     }
 };

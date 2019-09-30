@@ -50,7 +50,7 @@ enum class Mode {
 };
 
 template <class CRTP, template <class> class Optional = std::void_t> struct HasMode : public HasMore<CRTP, HasMode<CRTP, Optional>> {
-    [[nodiscard]] auto mode() const noexcept {
+    [[nodiscard]] inline auto mode() const noexcept {
         if constexpr (std::is_void_v<Optional<void>>)
             return *magic_enum::enum_cast<Mode>(this->get_node()->first_attribute("mode")->value());
         const auto mode_attr = this->get_node()->first_attribute("mode");
@@ -65,7 +65,7 @@ enum class Match {
 };
 
 template <class CRTP, template <class> class Optional = std::void_t> struct HasMatch : public HasMore<CRTP, HasMatch<CRTP, Optional>> {
-    [[nodiscard]] auto match() const noexcept {
+    [[nodiscard]] inline auto match() const noexcept {
         if constexpr (std::is_void_v<Optional<void>>)
             return *magic_enum::enum_cast<Match>(this->get_node()->first_attribute("mode")->value());
         const auto match_attr = this->get_node()->first_attribute("mode");
@@ -80,7 +80,7 @@ enum class Check {
 };
 
 template <class CRTP, template <class> class Optional = std::void_t> struct HasCheck : public HasMore<CRTP, HasCheck<CRTP, Optional>> {
-    [[nodiscard]] auto check() const noexcept {
+    [[nodiscard]] inline auto check() const noexcept {
         if constexpr (std::is_void_v<Optional<void>>)
             return *magic_enum::enum_cast<Check>(this->get_node()->first_attribute("mode")->value());
         const auto check_attr = this->get_node()->first_attribute("mode");
@@ -94,18 +94,18 @@ struct Model : public Node {
         forbid,
     };
 
-    [[nodiscard]] std::optional<Fallback> fallback() const noexcept {
+    [[nodiscard]] inline std::optional<Fallback> fallback() const noexcept {
         const auto fb_node = node->first_attribute("fallback");
         return fb_node ? magic_enum::enum_cast<Fallback>(fb_node->value()) : std::nullopt;
     }
-    [[nodiscard]] Optional<String> vendor_id() const noexcept { return String{node->first_attribute("vendor_id")}; }
-    [[nodiscard]] explicit operator std::string_view() const noexcept { return {node->value(), node->value_size()}; }
+    [[nodiscard]] inline Optional<String> vendor_id() const noexcept { return String{node->first_attribute("vendor_id")}; }
+    [[nodiscard]] inline explicit operator std::string_view() const noexcept { return {node->value(), node->value_size()}; }
 };
 
 struct Topology : public Node {
-    [[nodiscard]] Integral sockets() const noexcept { return Integral{node->first_attribute("sockets")}; }
-    [[nodiscard]] Integral cores() const noexcept { return Integral{node->first_attribute("cores")}; }
-    [[nodiscard]] Integral threads() const noexcept { return Integral{node->first_attribute("threads")}; }
+    [[nodiscard]] inline Integral sockets() const noexcept { return Integral{node->first_attribute("sockets")}; }
+    [[nodiscard]] inline Integral cores() const noexcept { return Integral{node->first_attribute("cores")}; }
+    [[nodiscard]] inline Integral threads() const noexcept { return Integral{node->first_attribute("threads")}; }
 };
 
 struct Feature : public Node {
@@ -117,8 +117,8 @@ struct Feature : public Node {
         forbid,
     };
 
-    [[nodiscard]] Policy policy() const noexcept { return *magic_enum::enum_cast<Policy>(node->first_attribute("policy")->value()); }
-    [[nodiscard]] String name() const noexcept { return String{node->first_attribute("name")}; }
+    [[nodiscard]] inline Policy policy() const noexcept { return *magic_enum::enum_cast<Policy>(node->first_attribute("policy")->value()); }
+    [[nodiscard]] inline String name() const noexcept { return String{node->first_attribute("name")}; }
 };
 
 struct Cache : public Node {
@@ -128,13 +128,13 @@ struct Cache : public Node {
         disable,
     };
 
-    [[nodiscard]] Optional<String> level() const noexcept { return String{node->first_attribute("level")}; }
-    [[nodiscard]] Mode mode() const noexcept { return *magic_enum::enum_cast<Mode>(node->first_attribute("mode")->value()); }
+    [[nodiscard]] inline Optional<String> level() const noexcept { return String{node->first_attribute("level")}; }
+    [[nodiscard]] inline Mode mode() const noexcept { return *magic_enum::enum_cast<Mode>(node->first_attribute("mode")->value()); }
 };
 
 struct NumaDistance : public Node {
-    [[nodiscard]] Integral id() const noexcept { return Integral{node->first_attribute("id")}; }
-    [[nodiscard]] Integral value() const noexcept { return Integral{node->first_attribute("value")}; }
+    [[nodiscard]] inline Integral id() const noexcept { return Integral{node->first_attribute("id")}; }
+    [[nodiscard]] inline Integral value() const noexcept { return Integral{node->first_attribute("value")}; }
 };
 
 struct NumaCell : public Node {
@@ -143,15 +143,15 @@ struct NumaCell : public Node {
         private_,
     };
 
-    [[nodiscard]] Optional<Integral> id() const noexcept { return Integral{node->first_attribute("id")}; }
-    [[nodiscard]] String cpuset() const noexcept { return String{node->first_attribute("cpuset")}; }
-    [[nodiscard]] Integral memory() const noexcept { return Integral{node->first_attribute("memory")}; }
-    [[nodiscard]] Optional<String> unit() const noexcept { return String{node->first_attribute("unit")}; }
-    [[nodiscard]] std::optional<MemAccess> mem_access() const noexcept {
+    [[nodiscard]] inline Optional<Integral> id() const noexcept { return Integral{node->first_attribute("id")}; }
+    [[nodiscard]] inline String cpuset() const noexcept { return String{node->first_attribute("cpuset")}; }
+    [[nodiscard]] inline Integral memory() const noexcept { return Integral{node->first_attribute("memory")}; }
+    [[nodiscard]] inline Optional<String> unit() const noexcept { return String{node->first_attribute("unit")}; }
+    [[nodiscard]] inline std::optional<MemAccess> mem_access() const noexcept {
         const auto ma_node = node->first_attribute("memAccess");
         return ma_node ? magic_enum::enum_cast<MemAccess>(ma_node->value()) : std::nullopt;
     }
-    [[nodiscard]] Optional<NamedSpan<NumaDistance>> distances() const noexcept {
+    [[nodiscard]] inline Optional<NamedSpan<NumaDistance>> distances() const noexcept {
         return NamedSpan<NumaDistance>{"sibling", node->first_node("distances")};
     }
 };

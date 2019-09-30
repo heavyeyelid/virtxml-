@@ -29,7 +29,7 @@ struct String : public Value {
 };
 
 struct Alias : public Node {
-    [[nodiscard]] String name() const noexcept { return String{node->first_attribute("name")}; }
+    [[nodiscard]] inline String name() const noexcept { return String{node->first_attribute("name")}; }
 };
 
 struct StringNode : public Node {
@@ -65,7 +65,7 @@ enum class OnOff : bool {
 struct Uuid : public String {
     enum class Form { Packed, Dashed };
 #if 1 /* With functions */
-    [[nodiscard]] Form form() const noexcept { return item->value_size() == 32u ? Form::Packed : Form::Dashed; }
+    [[nodiscard]] inline Form form() const noexcept { return item->value_size() == 32u ? Form::Packed : Form::Dashed; }
 #else
     using form(this s) = item->value_size() == 32u ? Form::Packed : Form::Dashed;
 #endif
@@ -88,7 +88,7 @@ struct Uuid : public String {
     }
 
   private:
-    [[nodiscard]] constexpr unsigned char hexc2b(char hexc) const noexcept {
+    [[nodiscard]] inline constexpr unsigned char hexc2b(char hexc) const noexcept {
         if (hexc >= 'a' && hexc <= 'f')
             return 'a' - hexc + 0xa;
         if (hexc >= 'A' && hexc <= 'F')
