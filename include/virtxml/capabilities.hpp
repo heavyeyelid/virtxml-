@@ -167,12 +167,12 @@ struct DriverCapabilities {
 #if 1 /* With functions */
   private:
     // inline auto cap() { return doc.first_node("capabilities"); }
-    [[nodiscard]] inline inline auto cap() const { return doc.first_node("capabilities"); }
+    [[nodiscard]] inline auto cap() const { return doc.first_node("capabilities"); }
 
   public:
     // inline auto host() { return Host{cap()->first_node("host")}; }
-    [[nodiscard]] inline inline Host host() const { return {cap()->first_node("host")}; }
-    [[nodiscard]] inline inline GuestList guest_list() { return GuestList{cap()}; }
+    [[nodiscard]] inline Host host() const { return {cap()->first_node("host")}; }
+    [[nodiscard]] inline GuestList guest_list() { return GuestList{cap()}; }
 #else /* With paramexpr */
   private
     using cap(this s) = s.doc.first_node("capabilities");
