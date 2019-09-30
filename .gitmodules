@@ -4,15 +4,3 @@
 [submodule "thirdparty/rapidxml_ns"]
 	path = thirdparty/rapidxml_ns
 	url = https://github.com/svgpp/rapidxml_ns.git
-[submodule "thirdparty/rapidjson"]
-	path = thirdparty/rapidjson
-	url = https://github.com/Tencent/rapidjson.git
-[submodule "thirdparty/lift"]
-	path = thirdparty/lift
-	url = https://github.com/rollbear/lift.git
-[submodule "thirdparty/inih"]
-	path = thirdparty/inih
-	url = https://github.com/jtilly/inih.git
-[submodule "thirdparty/ctre"]
-	path = thirdparty/ctre
-	url = https://github.com/hanickadot/compile-time-regular-expressions
