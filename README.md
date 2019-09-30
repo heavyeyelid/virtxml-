@@ -1,20 +1,7 @@
-# HeavyEyelid
-## Building
-### Dependencies *(debian packages)*
-- libvirt-dev
-- libboost-system-dev
+# virtxml++
 
-### Build steps
-#### Getting sources
-```
-$ git clone https://github.com/ShinoYasx/HeavyEyelid.git
-$ git submodule update --init
-```
-#### Compiling
-```
-$ cd HeavyEyelid/
-$ mkdir build
-$ cd build/
-$ cmake ..
-$ make -j $(nproc)
-```
+This repository contains the C++ binding for the XML produced and consumed by the libvirt API.
+Its main use is in the [virthttp](https://github.com/heavyeyelid/virthttp) project.
+
+The intended way to use this header-only library is to add it to your git submodules and use a simple `add_subdirectory` on the submodule's folder.
+Note: until further notice, this behavior is not setup
